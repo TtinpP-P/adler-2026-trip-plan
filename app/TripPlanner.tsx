@@ -3,58 +3,75 @@
 /* eslint-disable @next/next/no-img-element */
 
 import {
+  ArrowLeft,
   ArrowRight,
   Barbell,
   CalendarDots,
   CaretDown,
   Check,
   CheckCircle,
-  Coffee,
   Compass,
   DownloadSimple,
   ForkKnife,
-  Heart,
   House,
-  Info,
-  ListChecks,
+  List,
   MapPin,
-  Mountains,
+  Moon,
   NavigationArrow,
   Phone,
-  Printer,
+  ShoppingBag,
+  Storefront,
+  Sun,
   Tree,
   Wallet,
-  WarningCircle,
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import {
   BUDGET,
   DAYS,
-  HOME,
+  FEATURED_EVENT_IDS,
   PLAN_TOTAL,
   PLACES,
+  PRACTICAL_PLACES,
   WORKING_CEILING,
+  type Meal,
   type Place,
-  type PlaceCategory,
+  type PracticalPlaceCategory,
   type TimelineItem,
 } from "./data";
 
-const STORAGE_KEY = "adler-2026-trip-planner-v2";
+const STORAGE_KEY = "adler-2026-trip-planner-v3";
+
+type Theme = "dark" | "light";
 
 type StoredState = {
   dayId?: string;
   checks?: Record<string, boolean>;
-  selectedPlaces?: string[];
   actuals?: Record<string, number>;
+  theme?: Theme;
+  sidebarCollapsed?: boolean;
 };
 
-const CATEGORY_LABELS: Record<PlaceCategory | "all", string> = {
-  all: "Все",
-  own: "Своя еда",
-  treat: "Вкусняшки",
+type DayEntry =
+  | { type: "timeline"; sort: number; item: TimelineItem }
+  | { type: "meal"; sort: number; item: Meal };
+
+const NAV_ITEMS = [
+  { id: "plan", label: "План поездки", icon: CalendarDots },
+  { id: "events", label: "6 мероприятий", icon: Compass },
+  { id: "food", label: "Питание", icon: ForkKnife },
+  { id: "guide", label: "Магазины и точки", icon: Storefront },
+  { id: "budget", label: "Смета", icon: Wallet },
+] as const;
+
+const PRACTICAL_LABELS: Record<PracticalPlaceCategory, string> = {
+  training: "Зал",
+  groceries: "Продукты",
+  delicacies: "Деликатесы",
+  souvenirs: "Сувениры",
   date: "Свидание",
-  activity: "Маршрут",
+  treat: "Вкусняшки",
 };
 
 const KIND_ICONS: Record<
@@ -64,16 +81,27 @@ const KIND_ICONS: Record<
   move: NavigationArrow,
   nature: Tree,
   training: Barbell,
-  date: Heart,
-  mountain: Mountains,
-  rest: Compass,
-  task: ListChecks,
+  date: Compass,
+  mountain: Compass,
+  rest: House,
+  task: CheckCircle,
 };
 
 const formatRub = (value: number) =>
-  new Intl.NumberFormat("ru-RU").format(value) + " ₽";
+  `${new Intl.NumberFormat("ru-RU").format(value)} ₽`;
+
+const timeToNumber = (value: string) => {
+  const match = value.match(/(\d{1,2}):(\d{2})/);
+  return match ? Number(match[1]) * 60 + Number(match[2]) : 9999;
+};
 
 function chooseInitialDay() {
+  const params = new URLSearchParams(
+    typeof window === "undefined" ? "" : window.location.search,
+  );
+  const requested = params.get("day");
+  if (requested && DAYS.some((day) => day.id === requested)) return requested;
+
   const now = new Date();
   const first = new Date(`${DAYS[0].id}T00:00:00+03:00`);
   const last = new Date(`${DAYS[DAYS.length - 1].id}T23:59:59+03:00`);
@@ -86,41 +114,29 @@ function chooseInitialDay() {
 }
 
 function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({
+  const target = document.getElementById(id);
+  if (!target) return;
+  target.scrollIntoView({
     behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? "auto"
       : "smooth",
     block: "start",
   });
-}
-
-function IconButtonLabel({
-  icon: Icon,
-  children,
-}: {
-  icon: React.ComponentType<{ size?: number; weight?: "regular" | "bold" }>;
-  children: React.ReactNode;
-}) {
-  return (
-    <>
-      <Icon size={19} weight="bold" aria-hidden="true" />
-      <span>{children}</span>
-    </>
-  );
+  target.focus({ preventScroll: true });
 }
 
 function ActionLink({
   href,
   children,
-  kind = "secondary",
+  primary = false,
 }: {
   href: string;
   children: React.ReactNode;
-  kind?: "primary" | "secondary" | "quiet";
+  primary?: boolean;
 }) {
   return (
     <a
-      className={`action-link action-link--${kind}`}
+      className={`action-link${primary ? " action-link--primary" : ""}`}
       href={href}
       target="_blank"
       rel="noreferrer"
@@ -130,217 +146,119 @@ function ActionLink({
   );
 }
 
-function MealCard({
+function EventCard({ place, number }: { place: Place; number: number }) {
+  return (
+    <article className="event-card">
+      <img src={place.image} alt={place.imageAlt} loading="lazy" />
+      <div className="event-card__body">
+        <div className="event-card__meta">
+          <span>0{number}</span>
+          <p>{place.context}</p>
+        </div>
+        <h3>{place.title}</h3>
+        <p className="location-line">
+          <MapPin size={15} weight="fill" aria-hidden="true" />
+          {place.location}
+        </p>
+        <strong className="event-card__price">{place.price}</strong>
+        <details className="compact-details">
+          <summary>
+            Практические детали
+            <CaretDown size={16} weight="bold" aria-hidden="true" />
+          </summary>
+          <div>
+            <p>{place.practical}</p>
+            <p>{place.foodPolicy}</p>
+          </div>
+        </details>
+        <div className="action-row">
+          <ActionLink href={place.mapUrl}>
+            <MapPin size={16} weight="bold" />
+            Карта
+          </ActionLink>
+          <ActionLink href={place.routeUrl} primary>
+            <NavigationArrow size={16} weight="bold" />
+            Маршрут
+          </ActionLink>
+          {place.sourceUrl ? (
+            <ActionLink href={place.sourceUrl}>Источник</ActionLink>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MealRow({
   meal,
   checked,
   onCheck,
 }: {
-  meal: (typeof DAYS)[number]["meals"][number];
+  meal: Meal;
   checked: boolean;
   onCheck: () => void;
 }) {
   return (
-    <article className={`meal-card ${meal.type === "date" ? "meal-card--date" : ""}`}>
-      <div className="meal-card__top">
-        <div>
-          <span className="meal-card__time">{meal.time}</span>
-          <span className="meal-card__label">{meal.label}</span>
-        </div>
-        <button
-          className={`check-button ${checked ? "is-checked" : ""}`}
-          type="button"
-          aria-label={`${checked ? "Отменить отметку" : "Отметить"}: ${meal.label}`}
-          aria-pressed={checked}
-          onClick={onCheck}
-        >
-          {checked ? <Check size={17} weight="bold" /> : null}
-        </button>
+    <article className="meal-row">
+      <div className="meal-row__time">
+        <strong>{meal.time}</strong>
+        <span>{meal.label}</span>
       </div>
-
-      <div className="meal-card__title-row">
-        {meal.type === "date" ? (
-          <Heart size={21} weight="fill" aria-hidden="true" />
-        ) : (
-          <ForkKnife size={21} weight="bold" aria-hidden="true" />
-        )}
-        <h3>{meal.title}</h3>
-      </div>
-      <p className="meal-card__place">{meal.location}</p>
-      <span className={`status-pill status-pill--${meal.status ?? "confirmed"}`}>
-        {meal.status === "verify" ? "Уточнить место" : meal.type === "date" ? "Ресторан" : "Своя еда"}
-      </span>
-
-      <details className="inline-details">
-        <summary>
-          Что взять и как хранить
-          <CaretDown size={17} weight="bold" aria-hidden="true" />
-        </summary>
-        <div className="meal-detail-grid">
-          <div>
-            <span>Взять</span>
-            <p>{meal.pack}</p>
-          </div>
-          <div>
-            <span>Хранение</span>
-            <p>{meal.storage}</p>
-          </div>
-          <div>
-            <span>Вода</span>
-            <p>{meal.water}</p>
-          </div>
-          <div className="meal-detail-grid__note">
-            <span>Практично</span>
-            <p>{meal.note}</p>
-          </div>
-        </div>
-      </details>
-
-      <div className="card-actions">
-        <ActionLink href={meal.mapUrl} kind="quiet">
-          <MapPin size={18} weight="bold" aria-hidden="true" />
-          На карте
-        </ActionLink>
-        <ActionLink href={meal.routeUrl} kind="quiet">
-          <NavigationArrow size={18} weight="bold" aria-hidden="true" />
-          Маршрут
-        </ActionLink>
-      </div>
-    </article>
-  );
-}
-
-function PlaceCard({
-  place,
-  selected,
-  onSelect,
-  onOpen,
-}: {
-  place: Place;
-  selected: boolean;
-  onSelect: () => void;
-  onOpen: () => void;
-}) {
-  return (
-    <article className="place-card">
-      <div className="place-card__media">
-        <img src={place.image} alt={place.imageAlt} loading="lazy" />
-        <span className={`category-chip category-chip--${place.category}`}>
-          {CATEGORY_LABELS[place.category]}
-        </span>
-      </div>
-      <div className="place-card__body">
-        <p className="place-card__context">{place.context}</p>
-        <h3>{place.title}</h3>
-        <p className="place-card__location">
-          <MapPin size={17} weight="fill" aria-hidden="true" />
-          {place.location}
-        </p>
-        <div className="place-card__facts">
-          <span>{place.price}</span>
-          <span>{place.foodPolicy}</span>
-        </div>
-        <div className="place-card__footer">
-          <button className="text-button" type="button" onClick={onOpen}>
-            Подробнее
-            <ArrowRight size={17} weight="bold" aria-hidden="true" />
-          </button>
-          <button
-            className={`save-button ${selected ? "is-selected" : ""}`}
-            type="button"
-            aria-pressed={selected}
-            onClick={onSelect}
-          >
-            {selected ? (
-              <>
-                <CheckCircle size={19} weight="fill" aria-hidden="true" />
-                Выбрано
-              </>
-            ) : (
-              "Сохранить"
-            )}
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
-  useEffect(() => {
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    document.body.classList.add("sheet-open");
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-      document.body.classList.remove("sheet-open");
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="sheet-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.currentTarget === event.target) onClose();
-      }}
-    >
-      <section className="place-sheet" role="dialog" aria-modal="true" aria-labelledby="place-sheet-title">
-        <button className="sheet-close" type="button" onClick={onClose} aria-label="Закрыть">
-          <X size={21} weight="bold" />
-        </button>
-        <img src={place.image} alt={place.imageAlt} />
-        <div className="place-sheet__content">
-          <span className={`category-chip category-chip--${place.category}`}>
-            {CATEGORY_LABELS[place.category]}
+      <div className="meal-row__body">
+        <div className="meal-row__title">
+          <h4>{meal.title}</h4>
+          <span className={meal.type === "date" ? "pill pill--date" : "pill"}>
+            {meal.type === "date" ? "Свидание" : "Своя еда"}
           </span>
-          <p className="eyebrow">{place.context}</p>
-          <h2 id="place-sheet-title">{place.title}</h2>
-          <p className="sheet-location">
-            <MapPin size={18} weight="fill" aria-hidden="true" />
-            {place.location}
-          </p>
-          <div className="sheet-fact">
-            <span>Бюджет</span>
-            <p>{place.price}</p>
-          </div>
-          <div className="sheet-fact">
-            <span>На практике</span>
-            <p>{place.practical}</p>
-          </div>
-          <div className="sheet-fact">
-            <span>Еда</span>
-            <p>{place.foodPolicy}</p>
-          </div>
-          <div className="sheet-actions">
-            <ActionLink href={place.mapUrl} kind="secondary">
-              <MapPin size={19} weight="bold" aria-hidden="true" />
-              На карте
-            </ActionLink>
-            <ActionLink href={place.routeUrl} kind="primary">
-              <NavigationArrow size={19} weight="bold" aria-hidden="true" />
-              Построить маршрут
-            </ActionLink>
-          </div>
-          {place.sourceUrl ? (
-            <a className="source-link" href={place.sourceUrl} target="_blank" rel="noreferrer">
-              {place.sourceLabel ?? "Источник информации"}
-            </a>
-          ) : null}
         </div>
-      </section>
-    </div>
+        <p className="location-line">
+          <MapPin size={15} weight="fill" aria-hidden="true" />
+          {meal.location}
+        </p>
+        <details className="compact-details">
+          <summary>
+            Что взять и как хранить
+            <CaretDown size={16} weight="bold" aria-hidden="true" />
+          </summary>
+          <div className="meal-details">
+            <p><b>Взять:</b> {meal.pack}</p>
+            <p><b>Хранение:</b> {meal.storage}</p>
+            <p><b>Вода:</b> {meal.water}</p>
+            <p><b>Практично:</b> {meal.note}</p>
+          </div>
+        </details>
+        <div className="action-row">
+          <ActionLink href={meal.mapUrl}>
+            <MapPin size={16} weight="bold" />
+            Карта
+          </ActionLink>
+          <ActionLink href={meal.routeUrl}>
+            <NavigationArrow size={16} weight="bold" />
+            Маршрут
+          </ActionLink>
+        </div>
+      </div>
+      <button
+        className={`check-control${checked ? " is-checked" : ""}`}
+        type="button"
+        aria-pressed={checked}
+        aria-label={`${checked ? "Отменить отметку" : "Отметить"}: ${meal.title}`}
+        onClick={onCheck}
+      >
+        {checked ? <Check size={16} weight="bold" /> : null}
+      </button>
+    </article>
   );
 }
 
 export default function TripPlanner() {
   const [dayId, setDayId] = useState(chooseInitialDay);
   const [checks, setChecks] = useState<Record<string, boolean>>({});
-  const [selectedPlaces, setSelectedPlaces] = useState<string[]>([]);
   const [actuals, setActuals] = useState<Record<string, number>>({});
-  const [filter, setFilter] = useState<PlaceCategory | "all">("all");
-  const [activePlace, setActivePlace] = useState<Place | null>(null);
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("plan");
   const [hydrated, setHydrated] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
 
@@ -349,34 +267,87 @@ export default function TripPlanner() {
     try {
       stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as StoredState;
     } catch {
-      // A damaged local preference should never block the plan.
+      // Local preferences are optional.
     }
     const timer = window.setTimeout(() => {
-      if (stored.dayId && DAYS.some((day) => day.id === stored.dayId)) setDayId(stored.dayId);
+      if (stored.dayId && DAYS.some((day) => day.id === stored.dayId)) {
+        setDayId(stored.dayId);
+      }
       if (stored.checks) setChecks(stored.checks);
-      if (stored.selectedPlaces) setSelectedPlaces(stored.selectedPlaces);
       if (stored.actuals) setActuals(stored.actuals);
+      if (stored.theme) setTheme(stored.theme);
+      if (typeof stored.sidebarCollapsed === "boolean") {
+        setSidebarCollapsed(stored.sidebarCollapsed);
+      }
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    const value: StoredState = { dayId, checks, selectedPlaces, actuals };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-  }, [actuals, checks, dayId, hydrated, selectedPlaces]);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
-  const selectedDay = DAYS.find((day) => day.id === dayId) ?? DAYS[0];
-  const visiblePlaces = useMemo(
-    () => (filter === "all" ? PLACES : PLACES.filter((place) => place.category === filter)),
-    [filter],
-  );
-  const checkedCount = Object.values(checks).filter(Boolean).length;
-  const totalTasks = DAYS.reduce(
-    (sum, day) => sum + day.timeline.filter((item) => item.checkable).length + day.meals.length,
+  useEffect(() => {
+    if (!hydrated) return;
+    const value: StoredState = {
+      dayId,
+      checks,
+      actuals,
+      theme,
+      sidebarCollapsed,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  }, [actuals, checks, dayId, hydrated, sidebarCollapsed, theme]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target.id) setActiveSection(visible.target.id);
+      },
+      { rootMargin: "-20% 0px -64% 0px", threshold: [0.05, 0.25, 0.5] },
+    );
+    NAV_ITEMS.forEach(({ id }) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const selectedDayIndex = Math.max(
     0,
+    DAYS.findIndex((day) => day.id === dayId),
   );
+  const selectedDay = DAYS[selectedDayIndex] ?? DAYS[0];
+
+  const featuredEvents = useMemo(
+    () =>
+      FEATURED_EVENT_IDS.map((id) => PLACES.find((place) => place.id === id)).filter(
+        (place): place is Place => Boolean(place),
+      ),
+    [],
+  );
+
+  const dayEntries = useMemo<DayEntry[]>(
+    () =>
+      [
+        ...selectedDay.timeline.map((item) => ({
+          type: "timeline" as const,
+          sort: timeToNumber(item.time),
+          item,
+        })),
+        ...selectedDay.meals.map((item) => ({
+          type: "meal" as const,
+          sort: timeToNumber(item.time),
+          item,
+        })),
+      ].sort((a, b) => a.sort - b.sort),
+    [selectedDay],
+  );
+
   const actualTotal = Object.values(actuals).reduce(
     (sum, value) => sum + (Number.isFinite(value) ? value : 0),
     0,
@@ -385,589 +356,510 @@ export default function TripPlanner() {
 
   const setDay = (nextDayId: string) => {
     setDayId(nextDayId);
-    history.replaceState(null, "", `?day=${nextDayId}#day`);
+    history.replaceState(null, "", `?day=${nextDayId}#plan`);
+  };
+
+  const moveDay = (direction: -1 | 1) => {
+    const next = Math.min(DAYS.length - 1, Math.max(0, selectedDayIndex + direction));
+    setDay(DAYS[next].id);
   };
 
   const toggleCheck = (id: string) =>
     setChecks((current) => ({ ...current, [id]: !current[id] }));
 
-  const togglePlace = (id: string) =>
-    setSelectedPlaces((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
+  const navigate = (id: string) => {
+    setDrawerOpen(false);
+    setActiveSection(id);
+    window.setTimeout(() => scrollToSection(id), 40);
+  };
+
+  const toggleMenu = () => {
+    if (window.matchMedia("(max-width: 859px)").matches) {
+      setDrawerOpen((current) => !current);
+    } else {
+      setSidebarCollapsed((current) => !current);
+    }
+  };
 
   const downloadHtml = () => {
-    const esc = (value: string) =>
-      value
+    const esc = (value: string | number) =>
+      String(value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;");
-    const dayMarkup = DAYS.map(
-      (day) => `
-        <section>
-          <p class="eyebrow">${esc(day.eyebrow)} · ${esc(day.weekday)}</p>
-          <h2>${esc(day.shortDate)} · ${esc(day.title)}</h2>
-          <p>${esc(day.subtitle)}</p>
-          <h3>Три приёма пищи</h3>
-          ${day.meals
-            .map(
-              (meal) => `
-              <details>
-                <summary><strong>${esc(meal.time)} · ${esc(meal.label)}:</strong> ${esc(meal.title)}</summary>
-                <p><b>Где:</b> ${esc(meal.location)}</p>
-                <p><b>Взять:</b> ${esc(meal.pack)}</p>
-                <p><b>Хранение:</b> ${esc(meal.storage)}</p>
-                <p><b>Вода:</b> ${esc(meal.water)}</p>
-                <p>${esc(meal.note)}</p>
-                <p><a href="${meal.mapUrl}">На карте</a> · <a href="${meal.routeUrl}">Маршрут</a></p>
-              </details>`,
-            )
-            .join("")}
-          <h3>Маршрут дня</h3>
-          <ol>${day.timeline
-            .map(
-              (item) =>
-                `<li><b>${esc(item.time)} · ${esc(item.title)}</b><br>${esc(item.detail)}</li>`,
-            )
-            .join("")}</ol>
-          <p class="fallback"><b>План Б:</b> ${esc(day.fallback)}</p>
-        </section>`,
+    const link = (href: string, label: string) =>
+      `<a href="${esc(href)}">${esc(label)}</a>`;
+    const daysMarkup = DAYS.map(
+      (day) => `<section>
+        <p class="eyebrow">${esc(day.eyebrow)} · ${esc(day.weekday)}</p>
+        <h2>${esc(day.shortDate)} · ${esc(day.title)}</h2>
+        <p>${esc(day.subtitle)}</p>
+        <h3>Питание</h3>
+        ${day.meals
+          .map(
+            (meal) => `<details>
+              <summary><b>${esc(meal.time)} · ${esc(meal.label)}</b> — ${esc(meal.title)}</summary>
+              <p>${esc(meal.location)}</p><p><b>Взять:</b> ${esc(meal.pack)}</p>
+              <p><b>Хранение:</b> ${esc(meal.storage)}</p><p><b>Вода:</b> ${esc(meal.water)}</p>
+              <p>${link(meal.mapUrl, "Карта")} · ${link(meal.routeUrl, "Маршрут")}</p>
+            </details>`,
+          )
+          .join("")}
+        <h3>Маршрут</h3>
+        <ol>${day.timeline
+          .map(
+            (item) => `<li class="${checks[item.id] ? "done" : ""}">
+              <b>${esc(item.time)} · ${esc(item.title)}</b><br>${esc(item.detail)}
+              ${item.mapUrl ? `<br>${link(item.mapUrl, "Карта")}` : ""}
+              ${item.routeUrl ? ` · ${link(item.routeUrl, "Маршрут")}` : ""}
+            </li>`,
+          )
+          .join("")}</ol>
+        <details><summary>План Б</summary><p>${esc(day.fallback)}</p></details>
+      </section>`,
+    ).join("");
+    const eventsMarkup = featuredEvents
+      .map(
+        (place) => `<article><h3>${esc(place.title)}</h3><p>${esc(place.context)} · ${esc(
+          place.location,
+        )}</p><p><b>${esc(place.price)}</b></p><p>${esc(place.practical)}</p>
+        <p>${link(place.mapUrl, "Карта")} · ${link(place.routeUrl, "Маршрут")}${
+          place.sourceUrl ? ` · ${link(place.sourceUrl, "Источник")}` : ""
+        }</p></article>`,
+      )
+      .join("");
+    const guideMarkup = PRACTICAL_PLACES.map(
+      (place) => `<article><h3>${esc(place.title)}</h3><p>${esc(place.location)}</p>
+      <p>${esc(place.practical)}</p><p>${link(place.mapUrl, "Карта")} · ${link(
+        place.routeUrl,
+        "Маршрут",
+      )}${place.sourceUrl ? ` · ${link(place.sourceUrl, "Источник")}` : ""}</p></article>`,
     ).join("");
     const budgetMarkup = BUDGET.map(
-      (row) =>
-        `<tr><td>${esc(row.category)}</td><td>${esc(row.calculation)}</td><td>${formatRub(
-          row.amount,
-        )}</td></tr>`,
+      (row) => `<tr><td>${esc(row.category)}</td><td>${esc(row.calculation)}</td>
+      <td>${esc(formatRub(row.amount))}</td><td>${esc(formatRub(actuals[row.id] ?? 0))}</td></tr>`,
     ).join("");
-    const html = `<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Адлер 2026 — офлайн-план</title>
-<style>
-body{margin:auto;max-width:860px;padding:32px 20px 80px;background:#f6f4ee;color:#172a2f;font:16px/1.55 Arial,sans-serif}
-h1,h2{font-family:Georgia,serif}section{background:#fff;border:1px solid #dce3e2;border-radius:18px;padding:20px;margin:18px 0}
-details{border-top:1px solid #dce3e2;padding:12px 0}summary{cursor:pointer}.eyebrow{color:#0f6b72;font-weight:700;text-transform:uppercase;font-size:12px}
-a{color:#0f6b72}.fallback{background:#fff4da;padding:12px;border-radius:10px}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #dce3e2;text-align:left}td:last-child{text-align:right;white-space:nowrap}
-@media(max-width:600px){body{padding:18px 12px 64px}section{padding:16px}table{font-size:13px}}
-</style></head><body>
-<p class="eyebrow">1–8 августа 2026 · сценарий B</p><h1>Адлер: понятный план поездки</h1>
-<p><b>Ваш рацион:</b> 23 приёма своей еды + 1 ресторанный ужин на свидании. Вкусняшки — отдельный конверт 2 000 ₽.</p>
-<p><b>Бюджет:</b> план ${formatRub(PLAN_TOTAL)} · рабочий потолок ${formatRub(WORKING_CEILING)}.</p>
-${dayMarkup}
-<section><h2>Смета</h2><table><thead><tr><th>Статья</th><th>Расчёт</th><th>Сумма</th></tr></thead><tbody>${budgetMarkup}</tbody></table></section>
-<p>Скачано из интерактивного плана «Адлер 2026».</p></body></html>`;
+    const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>Адлер 2026 — план поездки</title><style>
+      :root{color-scheme:dark}*{box-sizing:border-box}body{max-width:900px;margin:auto;padding:24px 16px 64px;background:#0b1018;color:#e8edf5;font:15px/1.55 Arial,sans-serif}
+      h1,h2,h3{line-height:1.2}section,article{border:1px solid #293342;background:#111824;padding:16px;margin:12px 0;border-radius:4px}
+      article{display:inline-block;width:calc(50% - 8px);vertical-align:top}a{color:#81e6d9}.eyebrow{color:#7dd3fc;font-size:12px;font-weight:700;text-transform:uppercase}
+      details{border-top:1px solid #293342;padding:10px 0}summary{cursor:pointer}.done{opacity:.55;text-decoration:line-through}
+      table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #293342;text-align:left}td:nth-last-child(-n+2){white-space:nowrap}
+      @media(max-width:620px){article{display:block;width:100%}table{font-size:12px}body{padding:14px 10px 48px}}
+      </style></head><body><p class="eyebrow">1–8 августа 2026 · сценарий B</p>
+      <h1>Адлер 2026</h1><p><b>Рабочий потолок:</b> ${esc(formatRub(WORKING_CEILING))}</p>
+      ${daysMarkup}<section><h2>6 мероприятий</h2>${eventsMarkup}</section>
+      <section><h2>Магазины и полезные точки</h2>${guideMarkup}</section>
+      <section><h2>Смета</h2><table><thead><tr><th>Статья</th><th>Расчёт</th><th>План</th><th>Факт</th></tr></thead>
+      <tbody>${budgetMarkup}</tbody></table></section></body></html>`;
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "Адлер_2026_офлайн_план.html";
+    anchor.download = "Адлер_2026_план.html";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
     setDownloaded(true);
-    window.setTimeout(() => setDownloaded(false), 2600);
+    window.setTimeout(() => setDownloaded(false), 2400);
   };
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell${sidebarCollapsed ? " is-sidebar-collapsed" : ""}${
+        drawerOpen ? " is-drawer-open" : ""
+      }`}
+    >
       <aside className="sidebar" aria-label="Навигация по плану">
-        <a className="brand" href="#overview" onClick={() => scrollToSection("overview")}>
-          <span className="brand__mark">
-            <Compass size={24} weight="fill" />
+        <button className="sidebar__brand" type="button" onClick={() => navigate("plan")}>
+          <span className="brand-mark"><Compass size={20} weight="fill" /></span>
+          <span className="sidebar__label">
+            <strong>АДЛЕР.26</strong>
+            <small>Полевой план</small>
           </span>
-          <span>
-            <strong>Адлер</strong>
-            <small>1–8 августа 2026</small>
-          </span>
-        </a>
+        </button>
         <nav className="sidebar__nav">
-          <button type="button" onClick={() => scrollToSection("overview")}>
-            <House size={20} weight="bold" /> Обзор
-          </button>
-          <button type="button" onClick={() => scrollToSection("day")}>
-            <CalendarDots size={20} weight="bold" /> По дням
-          </button>
-          <button type="button" onClick={() => scrollToSection("food")}>
-            <ForkKnife size={20} weight="bold" /> Еда
-          </button>
-          <button type="button" onClick={() => scrollToSection("places")}>
-            <MapPin size={20} weight="bold" /> Места
-          </button>
-          <button type="button" onClick={() => scrollToSection("budget")}>
-            <Wallet size={20} weight="bold" /> Смета
-          </button>
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className={activeSection === id ? "is-active" : ""}
+              aria-current={activeSection === id ? "page" : undefined}
+              aria-label={label}
+              onClick={() => navigate(id)}
+            >
+              <Icon size={20} weight={activeSection === id ? "fill" : "bold"} />
+              <span className="sidebar__label">{label}</span>
+            </button>
+          ))}
         </nav>
-        <div className="sidebar__budget">
-          <span>Рабочий потолок</span>
+        <div className="sidebar__summary">
+          <span className="sidebar__label">Потолок</span>
           <strong>{formatRub(WORKING_CEILING)}</strong>
-          <div className="mini-progress" aria-hidden="true">
-            <i style={{ width: `${(PLAN_TOTAL / WORKING_CEILING) * 100}%` }} />
-          </div>
-          <small>План {formatRub(PLAN_TOTAL)} · резерв 1 100 ₽</small>
         </div>
+        <button
+          className="sidebar__collapse"
+          type="button"
+          onClick={() => setSidebarCollapsed((current) => !current)}
+          aria-label={sidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
+        >
+          <ArrowLeft size={18} weight="bold" />
+          <span className="sidebar__label">Свернуть</span>
+        </button>
       </aside>
 
-      <main>
+      {drawerOpen ? (
+        <button
+          type="button"
+          className="drawer-scrim"
+          aria-label="Закрыть меню"
+          onClick={() => setDrawerOpen(false)}
+        />
+      ) : null}
+
+      <main id="content">
         <header className="topbar">
-          <div className="topbar__brand">
-            <Compass size={20} weight="fill" />
-            <span>Адлер 2026</span>
+          <button className="icon-button" type="button" onClick={toggleMenu} aria-label="Меню">
+            {drawerOpen ? <X size={21} weight="bold" /> : <List size={21} weight="bold" />}
+          </button>
+          <div className="topbar__title">
+            <span>{NAV_ITEMS.find((item) => item.id === activeSection)?.label ?? "План поездки"}</span>
+            <small>1–8 августа · 2 человека</small>
           </div>
           <div className="topbar__actions">
             <button
-              className="icon-action"
+              className="icon-button"
               type="button"
-              aria-label="Распечатать план"
-              onClick={() => window.print()}
+              aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"}
+              onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
             >
-              <Printer size={19} weight="bold" />
-              <span>Печать</span>
+              {theme === "dark" ? <Sun size={20} weight="bold" /> : <Moon size={20} weight="fill" />}
             </button>
-            <button
-              className="button button--primary button--compact"
-              type="button"
-              aria-label="Скачать план в HTML"
-              onClick={downloadHtml}
-            >
-              <IconButtonLabel icon={DownloadSimple}>Скачать HTML</IconButtonLabel>
+            <button className="download-button" type="button" onClick={downloadHtml}>
+              <DownloadSimple size={18} weight="bold" />
+              <span>Скачать HTML</span>
             </button>
           </div>
         </header>
 
-        <section className="hero section-anchor" id="overview">
-          <div className="hero__copy">
-            <p className="eyebrow">Персональный полевой план · 2 человека</p>
-            <h1>Поездка, в которой ясно, что делать дальше</h1>
-            <p className="hero__lead">
-              Восемь дней, 24 приёма пищи, маршруты и бюджет — без ресторанного квеста на каждом шаге.
-              Вы едите свою еду; исключение одно: свидание 3 августа.
-            </p>
-            <div className="hero__buttons">
-              <button className="button button--primary" type="button" onClick={() => scrollToSection("day")}>
-                <CalendarDots size={20} weight="bold" />
-                Открыть ближайший день
-              </button>
-              <button className="button button--secondary" type="button" onClick={downloadHtml}>
-                <DownloadSimple size={20} weight="bold" />
-                Скачать офлайн
-              </button>
-            </div>
-          </div>
-          <div className="hero__stats">
-            <div className="stat-card stat-card--budget">
-              <span>Рабочий потолок</span>
-              <strong>{formatRub(WORKING_CEILING)}</strong>
-              <p>План {formatRub(PLAN_TOTAL)} + рабочий резерв 1 100 ₽</p>
-            </div>
-            <div className="stat-card">
-              <ForkKnife size={24} weight="bold" />
-              <strong>23 + 1</strong>
-              <p>своя еда + ресторанное свидание</p>
-            </div>
-            <div className="stat-card stat-card--treat">
-              <Coffee size={24} weight="fill" />
-              <strong>2 000 ₽</strong>
-              <p>отдельно на кофе, десерты и напитки</p>
-            </div>
-            <div className="stat-card">
-              <ListChecks size={24} weight="bold" />
-              <strong>
-                {checkedCount}/{totalTasks}
-              </strong>
-              <p>отмечено на этом устройстве</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="quick-note" aria-label="Ключевое правило питания">
-          <div>
-            <ForkKnife size={22} weight="bold" />
-            <p>
-              <strong>Главное правило.</strong> Три приёма пищи запланированы каждый день. Вкусняшки не
-              заменяют завтрак, обед или ужин.
-            </p>
-          </div>
-          <button type="button" onClick={() => scrollToSection("food")}>
-            Показать еду
-            <ArrowRight size={18} weight="bold" />
-          </button>
-        </section>
-
-        <section className="day-section section-anchor" id="day">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Маршрут по дням</p>
-              <h2>Один день — один понятный сценарий</h2>
-            </div>
-            <p>Выбор дня сохраняется только на этом устройстве.</p>
-          </div>
-
-          <div className="day-tabs" role="tablist" aria-label="Выберите день поездки">
-            {DAYS.map((day) => (
-              <button
-                key={day.id}
-                className={day.id === selectedDay.id ? "is-active" : ""}
-                type="button"
-                role="tab"
-                aria-selected={day.id === selectedDay.id}
-                onClick={() => setDay(day.id)}
-              >
-                <span>{day.shortDate}</span>
-                <small>{day.weekday.slice(0, 3)}</small>
-              </button>
-            ))}
-          </div>
-
-          <article className="day-hero">
-            <img src={selectedDay.image} alt={selectedDay.imageAlt} />
-            <div className="day-hero__overlay" />
-            <div className="day-hero__content">
-              <p className="eyebrow">{selectedDay.eyebrow}</p>
-              <h2>{selectedDay.title}</h2>
-              <p>{selectedDay.subtitle}</p>
-              <span>{selectedDay.budget} на день</span>
-            </div>
-          </article>
-
-          <div className="day-layout">
-            <div className="timeline-panel">
-              <div className="panel-title">
-                <div>
-                  <span>Маршрут</span>
-                  <h3>{selectedDay.weekday}, {selectedDay.shortDate}</h3>
-                </div>
-                <span className="panel-title__count">{selectedDay.timeline.length} шага</span>
-              </div>
-              <ol className="timeline">
-                {selectedDay.timeline.map((item) => {
-                  const Icon = KIND_ICONS[item.kind];
-                  return (
-                    <li key={item.id} className={checks[item.id] ? "is-done" : ""}>
-                      <div className={`timeline__icon timeline__icon--${item.kind}`}>
-                        <Icon size={20} weight={item.kind === "date" ? "fill" : "bold"} />
-                      </div>
-                      <div className="timeline__body">
-                        <span className="timeline__time">{item.time}</span>
-                        <h4>{item.title}</h4>
-                        <p>{item.detail}</p>
-                        {item.warning ? (
-                          <p className="inline-warning">
-                            <WarningCircle size={17} weight="fill" />
-                            {item.warning}
-                          </p>
-                        ) : null}
-                        <div className="timeline__actions">
-                          {item.mapUrl ? (
-                            <ActionLink href={item.mapUrl} kind="quiet">
-                              <MapPin size={17} weight="bold" />
-                              Карта
-                            </ActionLink>
-                          ) : null}
-                          {item.routeUrl ? (
-                            <ActionLink href={item.routeUrl} kind="quiet">
-                              <NavigationArrow size={17} weight="bold" />
-                              Маршрут
-                            </ActionLink>
-                          ) : null}
-                          {item.phone ? (
-                            <a className="action-link action-link--quiet" href={`tel:${item.phone}`}>
-                              <Phone size={17} weight="bold" />
-                              Позвонить
-                            </a>
-                          ) : null}
-                        </div>
-                      </div>
-                      {item.checkable ? (
-                        <button
-                          className={`check-button timeline__check ${checks[item.id] ? "is-checked" : ""}`}
-                          type="button"
-                          aria-pressed={Boolean(checks[item.id])}
-                          aria-label={`${checks[item.id] ? "Отменить отметку" : "Отметить"}: ${item.title}`}
-                          onClick={() => toggleCheck(item.id)}
-                        >
-                          {checks[item.id] ? <Check size={17} weight="bold" /> : null}
-                        </button>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ol>
-              <div className="fallback-card">
-                <Info size={21} weight="fill" aria-hidden="true" />
-                <p>
-                  <strong>План Б</strong>
-                  {selectedDay.fallback}
-                </p>
-              </div>
-            </div>
-
-            <aside className="day-side">
-              <div className="side-card">
-                <span>База</span>
-                <h3>Фермерская, 26</h3>
-                <p>Гостевой дом «Дядя Стёпа»</p>
-                <ActionLink href={`https://yandex.ru/maps/?text=${encodeURIComponent(HOME)}`} kind="quiet">
-                  <MapPin size={18} weight="bold" />
-                  Открыть
-                </ActionLink>
-              </div>
-              <div className="side-card side-card--food">
-                <span>Питание дня</span>
-                <h3>3 из 3 слотов</h3>
-                <ul>
-                  {selectedDay.meals.map((meal) => (
-                    <li key={meal.id}>
-                      <span>{meal.time}</span>
-                      <p>{meal.label}</p>
-                      <small>{meal.type === "date" ? "Свидание" : "Своя еда"}</small>
-                    </li>
-                  ))}
-                </ul>
-                <button type="button" className="text-button" onClick={() => scrollToSection("food")}>
-                  Открыть детали
-                  <ArrowRight size={17} weight="bold" />
-                </button>
-              </div>
-            </aside>
-          </div>
-        </section>
-
-        <section className="food-section section-anchor" id="food">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Еда · {selectedDay.shortDate}</p>
-              <h2>Завтрак, обед и ужин уже стоят в маршруте</h2>
-            </div>
-            <div className="food-rule">
-              <ForkKnife size={20} weight="bold" />
-              {selectedDay.meals.filter((meal) => meal.type === "own").length} своих ·{" "}
-              {selectedDay.meals.filter((meal) => meal.type === "date").length} ресторан
-            </div>
-          </div>
-          <div className="meal-grid">
-            {selectedDay.meals.map((meal) => (
-              <MealCard
-                key={meal.id}
-                meal={meal}
-                checked={Boolean(checks[meal.id])}
-                onCheck={() => toggleCheck(meal.id)}
-              />
-            ))}
-          </div>
-          <div className="companion-note">
-            <Info size={21} weight="fill" />
-            <p>
-              <strong>Про второй бюджет.</strong> В смете сохранён отдельный конверт 12 000 ₽ на обычное
-              питание девушки. Он не меняет ваш режим своей еды и не входит в конверт вкусняшек.
-            </p>
-          </div>
-        </section>
-
-        <section className="places-section section-anchor" id="places">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Каталог мест</p>
-              <h2>Выбрать по фото, смыслу и логистике</h2>
-            </div>
-            <p>{selectedPlaces.length} сохранено на этом устройстве</p>
-          </div>
-          <div className="filter-row" role="group" aria-label="Фильтр каталога">
-            {(Object.keys(CATEGORY_LABELS) as Array<PlaceCategory | "all">).map((category) => (
-              <button
-                key={category}
-                type="button"
-                className={filter === category ? "is-active" : ""}
-                aria-pressed={filter === category}
-                onClick={() => setFilter(category)}
-              >
-                {category === "own" ? <ForkKnife size={18} weight="bold" /> : null}
-                {category === "treat" ? <Coffee size={18} weight="fill" /> : null}
-                {category === "date" ? <Heart size={18} weight="fill" /> : null}
-                {category === "activity" ? <Compass size={18} weight="bold" /> : null}
-                {CATEGORY_LABELS[category]}
-              </button>
-            ))}
-          </div>
-          <div className="place-grid">
-            {visiblePlaces.map((place) => (
-              <PlaceCard
-                key={place.id}
-                place={place}
-                selected={selectedPlaces.includes(place.id)}
-                onSelect={() => togglePlace(place.id)}
-                onOpen={() => setActivePlace(place)}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="download-banner">
-          <div>
-            <DownloadSimple size={28} weight="bold" />
-            <div>
-              <p className="eyebrow">Работает без приложения</p>
-              <h2>Сохраните весь план одним HTML-файлом</h2>
-              <p>Он откроется на телефоне и компьютере даже без интернета. Ссылки на карты останутся кликабельными.</p>
-            </div>
-          </div>
-          <button className="button button--primary" type="button" onClick={downloadHtml}>
-            <DownloadSimple size={20} weight="bold" />
-            Скачать HTML
-          </button>
-        </section>
-
-        <section className="budget-section section-anchor" id="budget">
-          <details className="budget-details">
-            <summary>
+        <div className="content">
+          <section className="plan-section section-anchor" id="plan" tabIndex={-1}>
+            <div className="trip-strip">
               <div>
-                <p className="eyebrow">Смета · в самом конце</p>
-                <h2>На что посчитаны {formatRub(WORKING_CEILING)}</h2>
-                <p>План {formatRub(PLAN_TOTAL)} + рабочий резерв 1 100 ₽</p>
+                <span>Сценарий B</span>
+                <strong>1–8 августа 2026</strong>
               </div>
-              <span className="budget-details__toggle">
-                Развернуть таблицу
-                <CaretDown size={21} weight="bold" />
-              </span>
-            </summary>
-            <div className="budget-content">
-              <div className="budget-overview">
-                <div>
-                  <span>Плановые конверты</span>
-                  <strong>{formatRub(PLAN_TOTAL)}</strong>
-                </div>
-                <div>
-                  <span>Рабочий резерв</span>
-                  <strong>1 100 ₽</strong>
-                </div>
-                <div>
-                  <span>Рабочий потолок</span>
-                  <strong>{formatRub(WORKING_CEILING)}</strong>
-                </div>
-                <div>
-                  <span>Факт введён</span>
-                  <strong>{formatRub(actualTotal)}</strong>
-                </div>
+              <div>
+                <span>Мероприятий</span>
+                <strong>6</strong>
               </div>
-              <div className="budget-meter" aria-label={`Остаток до потолка ${formatRub(remaining)}`}>
-                <div>
-                  <span>Остаток до рабочего потолка</span>
-                  <strong className={remaining < 0 ? "is-over" : ""}>{formatRub(remaining)}</strong>
+              <div>
+                <span>Рабочий потолок</span>
+                <strong>{formatRub(WORKING_CEILING)}</strong>
+              </div>
+              <div>
+                <span>Вкусняшки</span>
+                <strong>2 000 ₽</strong>
+              </div>
+            </div>
+
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">{selectedDay.eyebrow}</p>
+                <h1>{selectedDay.title}</h1>
+                <p>{selectedDay.subtitle}</p>
+              </div>
+              <span className="day-budget">{selectedDay.budget}</span>
+            </div>
+
+            <div className="day-switcher" aria-label="Выбор дня поездки">
+              <button
+                type="button"
+                onClick={() => moveDay(-1)}
+                disabled={selectedDayIndex === 0}
+                aria-label="Предыдущий день"
+              >
+                <ArrowLeft size={18} weight="bold" />
+              </button>
+              <label>
+                <span className="sr-only">День поездки</span>
+                <select value={selectedDay.id} onChange={(event) => setDay(event.currentTarget.value)}>
+                  {DAYS.map((day) => (
+                    <option key={day.id} value={day.id}>
+                      {day.shortDate} · {day.weekday}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => moveDay(1)}
+                disabled={selectedDayIndex === DAYS.length - 1}
+                aria-label="Следующий день"
+              >
+                <ArrowRight size={18} weight="bold" />
+              </button>
+            </div>
+
+            <div className="day-workspace">
+              <div className="day-image">
+                <img src={selectedDay.image} alt={selectedDay.imageAlt} />
+                <span>{selectedDay.shortDate}</span>
+              </div>
+              <div className="timeline-panel">
+                <div className="panel-heading">
+                  <h2>Хронология дня</h2>
+                  <span>{dayEntries.length} пунктов</span>
                 </div>
-                <div className="budget-meter__track">
+                <ol className="timeline">
+                  {dayEntries.map((entry) => {
+                    if (entry.type === "meal") {
+                      const meal = entry.item;
+                      return (
+                        <li key={meal.id} className={checks[meal.id] ? "is-done" : ""}>
+                          <div className="timeline__time">{meal.time}</div>
+                          <div className="timeline__icon timeline__icon--meal">
+                            <ForkKnife size={17} weight="bold" />
+                          </div>
+                          <div className="timeline__content">
+                            <div className="timeline__title">
+                              <h3>{meal.label}: {meal.title}</h3>
+                              <span className={meal.type === "date" ? "pill pill--date" : "pill"}>
+                                {meal.type === "date" ? "Свидание" : "Своя еда"}
+                              </span>
+                            </div>
+                            <p>{meal.location}</p>
+                            <div className="action-row">
+                              <ActionLink href={meal.mapUrl}>Карта</ActionLink>
+                              <ActionLink href={meal.routeUrl}>Маршрут</ActionLink>
+                            </div>
+                          </div>
+                          <button
+                            className={`check-control${checks[meal.id] ? " is-checked" : ""}`}
+                            type="button"
+                            aria-pressed={Boolean(checks[meal.id])}
+                            aria-label={`Отметить: ${meal.title}`}
+                            onClick={() => toggleCheck(meal.id)}
+                          >
+                            {checks[meal.id] ? <Check size={15} weight="bold" /> : null}
+                          </button>
+                        </li>
+                      );
+                    }
+                    const item = entry.item;
+                    const Icon = KIND_ICONS[item.kind];
+                    return (
+                      <li key={item.id} className={checks[item.id] ? "is-done" : ""}>
+                        <div className="timeline__time">{item.time}</div>
+                        <div className={`timeline__icon timeline__icon--${item.kind}`}>
+                          <Icon size={17} weight="bold" />
+                        </div>
+                        <div className="timeline__content">
+                          <h3>{item.title}</h3>
+                          <p>{item.detail}</p>
+                          <div className="action-row">
+                            {item.mapUrl ? <ActionLink href={item.mapUrl}>Карта</ActionLink> : null}
+                            {item.routeUrl ? <ActionLink href={item.routeUrl}>Маршрут</ActionLink> : null}
+                            {item.phone ? (
+                              <a className="action-link" href={`tel:${item.phone}`}>
+                                <Phone size={15} weight="bold" />
+                                Позвонить
+                              </a>
+                            ) : null}
+                          </div>
+                        </div>
+                        {item.checkable ? (
+                          <button
+                            className={`check-control${checks[item.id] ? " is-checked" : ""}`}
+                            type="button"
+                            aria-pressed={Boolean(checks[item.id])}
+                            aria-label={`Отметить: ${item.title}`}
+                            onClick={() => toggleCheck(item.id)}
+                          >
+                            {checks[item.id] ? <Check size={15} weight="bold" /> : null}
+                          </button>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ol>
+                <details className="fallback-details">
+                  <summary>
+                    План Б
+                    <CaretDown size={17} weight="bold" />
+                  </summary>
+                  <p>{selectedDay.fallback}</p>
+                </details>
+              </div>
+            </div>
+
+            <div className="food-panel section-anchor" id="food" tabIndex={-1}>
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Питание · {selectedDay.shortDate}</p>
+                  <h2>Завтрак, обед и ужин</h2>
+                </div>
+                <span>{selectedDay.meals.filter((meal) => meal.type === "own").length} своё · {selectedDay.meals.filter((meal) => meal.type === "date").length} ресторан</span>
+              </div>
+              <div className="meal-list">
+                {selectedDay.meals.map((meal) => (
+                  <MealRow
+                    key={meal.id}
+                    meal={meal}
+                    checked={Boolean(checks[meal.id])}
+                    onCheck={() => toggleCheck(meal.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="section-anchor" id="events" tabIndex={-1}>
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Основной маршрут</p>
+                <h2>Все 6 мероприятий</h2>
+                <p>Без фильтров: каждое место уже входит в утверждённый план.</p>
+              </div>
+            </div>
+            <div className="event-grid">
+              {featuredEvents.map((place, index) => (
+                <EventCard key={place.id} place={place} number={index + 1} />
+              ))}
+            </div>
+          </section>
+
+          <section className="section-anchor" id="guide" tabIndex={-1}>
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Адреса и ссылки</p>
+                <h2>Продукты, деликатесы, сувениры и важные точки</h2>
+                <p>Конкретные адреса, карты и маршруты — без отдельного поиска на месте.</p>
+              </div>
+            </div>
+            <div className="guide-list">
+              {PRACTICAL_PLACES.map((place) => (
+                <article className="guide-row" key={place.id}>
+                  <div className="guide-row__icon">
+                    {place.category === "training" ? (
+                      <Barbell size={19} weight="bold" />
+                    ) : place.category === "groceries" || place.category === "delicacies" ? (
+                      <ShoppingBag size={19} weight="bold" />
+                    ) : (
+                      <Storefront size={19} weight="bold" />
+                    )}
+                  </div>
+                  <div className="guide-row__body">
+                    <div>
+                      <span className="pill">{PRACTICAL_LABELS[place.category]}</span>
+                      <h3>{place.title}</h3>
+                    </div>
+                    <p className="location-line">
+                      <MapPin size={15} weight="fill" />
+                      {place.location}
+                    </p>
+                    <p>{place.practical}</p>
+                  </div>
+                  <div className="guide-row__actions">
+                    <ActionLink href={place.mapUrl}>Карта</ActionLink>
+                    <ActionLink href={place.routeUrl} primary>Маршрут</ActionLink>
+                    {place.phone ? (
+                      <a className="action-link" href={`tel:${place.phone}`}>
+                        <Phone size={15} weight="bold" />
+                        Звонок
+                      </a>
+                    ) : null}
+                    {place.sourceUrl ? <ActionLink href={place.sourceUrl}>Источник</ActionLink> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="budget-section section-anchor" id="budget" tabIndex={-1}>
+            <details className="budget-details">
+              <summary>
+                <div>
+                  <p className="eyebrow">Смета</p>
+                  <h2>{formatRub(WORKING_CEILING)}</h2>
+                </div>
+                <div className="budget-summary">
+                  <span>План <b>{formatRub(PLAN_TOTAL)}</b></span>
+                  <span>Резерв <b>1 100 ₽</b></span>
+                  <span>Факт <b>{formatRub(actualTotal)}</b></span>
+                  <span className={remaining < 0 ? "is-over" : ""}>Остаток <b>{formatRub(remaining)}</b></span>
+                </div>
+                <span className="budget-toggle">
+                  Развернуть
+                  <CaretDown size={19} weight="bold" />
+                </span>
+              </summary>
+              <div className="budget-content">
+                <div className="budget-meter" aria-label={`Потрачено ${formatRub(actualTotal)}`}>
                   <i
                     className={actualTotal > WORKING_CEILING ? "is-over" : ""}
-                    style={{
-                      width: `${Math.min(100, Math.max(0, (actualTotal / WORKING_CEILING) * 100))}%`,
-                    }}
+                    style={{ width: `${Math.min(100, (actualTotal / WORKING_CEILING) * 100)}%` }}
                   />
                 </div>
-              </div>
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Статья</th>
-                      <th>Как посчитано</th>
-                      <th>План</th>
-                      <th>Факт</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {BUDGET.map((row) => (
-                      <tr key={row.id}>
-                        <td>
-                          <strong>{row.category}</strong>
-                          <small>{row.note}</small>
-                        </td>
-                        <td>{row.calculation}</td>
-                        <td>{formatRub(row.amount)}</td>
-                        <td>
-                          <label className="actual-input">
-                            <span className="sr-only">Фактические траты: {row.category}</span>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min="0"
-                              step="50"
-                              value={actuals[row.id] ?? ""}
-                              placeholder="0"
-                              onChange={(event) => {
-                                const value = event.currentTarget.valueAsNumber;
-                                setActuals((current) => ({
-                                  ...current,
-                                  [row.id]: Number.isFinite(value) ? value : 0,
-                                }));
-                              }}
-                            />
-                            <span>₽</span>
-                          </label>
-                        </td>
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Статья</th>
+                        <th>Расчёт</th>
+                        <th>План</th>
+                        <th>Факт</th>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan={2}>Рабочий потолок</td>
-                      <td>{formatRub(WORKING_CEILING)}</td>
-                      <td>{formatRub(actualTotal)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    </thead>
+                    <tbody>
+                      {BUDGET.map((row) => (
+                        <tr key={row.id}>
+                          <td data-label="Статья">
+                            <strong>{row.category}</strong>
+                            <small>{row.note}</small>
+                          </td>
+                          <td data-label="Расчёт">{row.calculation}</td>
+                          <td data-label="План">{formatRub(row.amount)}</td>
+                          <td data-label="Факт">
+                            <label className="actual-input">
+                              <span className="sr-only">Фактические траты: {row.category}</span>
+                              <input
+                                type="number"
+                                inputMode="numeric"
+                                min="0"
+                                step="50"
+                                value={actuals[row.id] ?? ""}
+                                placeholder="0"
+                                onChange={(event) => {
+                                  const value = event.currentTarget.valueAsNumber;
+                                  setActuals((current) => ({
+                                    ...current,
+                                    [row.id]: Number.isFinite(value) ? value : 0,
+                                  }));
+                                }}
+                              />
+                              <span>₽</span>
+                            </label>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div className="budget-footnotes">
-                <p>
-                  <Info size={18} weight="fill" />
-                  Рабочий потолок снижен с 57 700 до 55 300 ₽ за счёт уменьшения операционного резерва с
-                  3 500 до 1 100 ₽. Сами активности и отдельные 2 000 ₽ на вкусняшки сохранены.
-                </p>
-                <p>
-                  Аварийная граница 60 000 ₽ — не цель для расходов. При приближении к 55 300 ₽ сначала
-                  останавливаются необязательные покупки и премиальные замены.
-                </p>
-              </div>
-            </div>
-          </details>
-        </section>
-
-        <footer>
-          <p>Адлер · Сириус · Хоста · Роза Хутор</p>
-          <span>Данные и цены проверены 27.07.2026; расписание и правила еды в объектах перепроверить перед выездом.</span>
-          <small>
-            Фото: официальные страницы Кавказского заповедника, Skypark, Роза Хутор, Сочи Парк Отеля,
-            ресторанов; Олимпийский парк и вокзал — Wikimedia Commons.
-          </small>
-        </footer>
+            </details>
+          </section>
+        </div>
       </main>
 
-      <nav className="mobile-nav" aria-label="Основная навигация">
-        <button type="button" onClick={() => scrollToSection("overview")}>
-          <House size={21} weight="bold" />
-          <span>Сейчас</span>
-        </button>
-        <button type="button" onClick={() => scrollToSection("day")}>
-          <CalendarDots size={21} weight="bold" />
-          <span>Дни</span>
-        </button>
-        <button type="button" onClick={() => scrollToSection("food")}>
-          <ForkKnife size={21} weight="bold" />
-          <span>Еда</span>
-        </button>
-        <button type="button" onClick={() => scrollToSection("places")}>
-          <MapPin size={21} weight="bold" />
-          <span>Места</span>
-        </button>
-        <button type="button" onClick={() => scrollToSection("budget")}>
-          <Wallet size={21} weight="bold" />
-          <span>Смета</span>
-        </button>
-      </nav>
-
-      {activePlace ? <PlaceSheet place={activePlace} onClose={() => setActivePlace(null)} /> : null}
       {downloaded ? (
         <div className="toast" role="status">
-          <CheckCircle size={20} weight="fill" />
-          HTML-файл скачан
+          <CheckCircle size={19} weight="fill" />
+          HTML скачан
         </div>
       ) : null}
     </div>

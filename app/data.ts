@@ -62,6 +62,27 @@ export type Place = {
   sourceLabel?: string;
 };
 
+export type PracticalPlaceCategory =
+  | "training"
+  | "groceries"
+  | "delicacies"
+  | "souvenirs"
+  | "date"
+  | "treat";
+
+export type PracticalPlace = {
+  id: string;
+  category: PracticalPlaceCategory;
+  title: string;
+  location: string;
+  practical: string;
+  mapUrl: string;
+  routeUrl: string;
+  sourceUrl?: string;
+  sourceLabel?: string;
+  phone?: string;
+};
+
 export type BudgetRow = {
   id: string;
   category: string;
@@ -743,14 +764,14 @@ export const PLACES: Place[] = [
     category: "activity",
     title: "Парк «Южные культуры»",
     context: "2 августа · прогулка до жары",
-    location: "Нагорный тупик, 13, Сириус",
+    location: "Нагорный тупик, 13/3Б, Сириус",
     price: "600 ₽ вход на двоих",
     image: "/places/southern-cultures.jpg",
     imageAlt: "Магнолия в парке Южные культуры",
-    practical: "09:00–19:00, касса до 18:00. План — 10:00–12:30.",
+    practical: "09:00–18:00, билеты до 17:00. План — 10:00–12:30.",
     foodPolicy: "Основной обед — после возвращения. Пикник внутри заранее не заявляем.",
-    mapUrl: mapUrl("Парк Южные культуры, Нагорный тупик, 13, Сириус"),
-    routeUrl: routeUrl(HOME, "Парк Южные культуры, Нагорный тупик, 13, Сириус"),
+    mapUrl: mapUrl("Парк Южные культуры, Нагорный тупик, 13/3Б, Сириус"),
+    routeUrl: routeUrl(HOME, "Парк Южные культуры, Нагорный тупик, 13/3Б, Сириус"),
     sourceUrl:
       "https://www.kavkazzapoved.ru/tours/park-yuzhnye-kultury/park-yuzhnye-kultury",
     sourceLabel: "Официальная страница",
@@ -770,12 +791,28 @@ export const PLACES: Place[] = [
     routeUrl: routeUrl("Парк Южные культуры, Сириус", "Имеретинская набережная, Сириус", "pd"),
   },
   {
+    id: "olympic-park",
+    category: "activity",
+    title: "Олимпийский парк и Поющий фонтан",
+    context: "3 августа · 13:30–21:00",
+    location: "Медальная площадь, Сириус",
+    price: "≈2 600 ₽ транспорт и аренда",
+    image: "/places/olympic-park.jpg",
+    imageAlt: "Поющий фонтан и олимпийские объекты в Сириусе",
+    practical: "Прогулка, раннее свидание и фонтан. Время шоу проверить утром 3 августа.",
+    foodPolicy: "Обед — своя еда до выезда; ужин — единственное ресторанное свидание.",
+    mapUrl: mapUrl("Олимпийский парк, Сириус"),
+    routeUrl: routeUrl(HOME, "Олимпийский парк, Сириус"),
+    sourceUrl: "https://sirius.gov.ru/afisha/",
+    sourceLabel: "Официальная афиша Сириуса",
+  },
+  {
     id: "grove-rest",
-    category: "own",
-    title: "Визит-центр рощи",
-    context: "4 августа · обед после маршрута",
+    category: "activity",
+    title: "Тисо-самшитовая роща",
+    context: "4 августа · Большое кольцо",
     location: "Тисо-самшитовая роща, Хоста",
-    price: "0 ₽ сверх входа",
+    price: "≈2 100 ₽ на двоих с дорогой",
     image: "/places/grove.jpg",
     imageAlt: "Зелёная тропа Тисо-самшитовой рощи",
     practical: "Ланч-бокс, холодовой элемент, 1–1,5 л воды на человека.",
@@ -817,11 +854,11 @@ export const PLACES: Place[] = [
   },
   {
     id: "rosa-valley",
-    category: "own",
-    title: "Набережная Мзымты, Роза Долина",
-    context: "6 августа · базовый ланч-спот",
+    category: "activity",
+    title: "Роза Хутор",
+    context: "6 августа · 560 → 1100 → 2320 м",
     location: "Роза Долина, 560 м",
-    price: "0 ₽",
+    price: "≈9 800 ₽ на двоих",
     image: "/places/rosa.webp",
     imageAlt: "Горы и зона отдыха курорта Роза Хутор",
     practical: "Скамейки и более предсказуемая логистика, чем на верхней станции.",
@@ -895,6 +932,148 @@ export const PLACES: Place[] = [
     routeUrl: routeUrl("Олимпийский парк, Сириус", "Моя Звезда by Novikov, Олимпийский проспект, 36/6, Сириус", "pd"),
     sourceUrl: "https://www.novikovgroup.ru/restaurants/detail/moya-zvezda/",
     sourceLabel: "Сайт ресторана",
+  },
+  {
+    id: "jules-verne",
+    category: "activity",
+    title: "Три тренировки в «Жюль Верн»",
+    context: "3, 5 и 7 августа",
+    location: "Улица Удачи, 7, Адлер",
+    price: "≈2 800 ₽ за три парные тренировки",
+    image: "/places/adler-station.jpg",
+    imageAlt: "Адлер — район расположения фитнес-клуба Жюль Верн",
+    practical: "Тренировки умеренные: full body, восстановительная и финальная. Режим клуба 08:00–22:00.",
+    foodPolicy: "Своя еда до или после тренировки по расписанию выбранного дня.",
+    mapUrl: mapUrl("Жюль Верн, фитнес-клуб, улица Удачи, 7, Адлер"),
+    routeUrl: routeUrl(HOME, "Жюль Верн, фитнес-клуб, улица Удачи, 7, Адлер", "pd"),
+    sourceUrl: "https://jv-fit.ru/",
+    sourceLabel: "Сайт фитнес-клуба",
+  },
+];
+
+export const FEATURED_EVENT_IDS = [
+  "southern-cultures",
+  "olympic-park",
+  "grove-rest",
+  "skypark",
+  "rosa-valley",
+  "jules-verne",
+] as const;
+
+export const PRACTICAL_PLACES: PracticalPlace[] = [
+  {
+    id: "gym",
+    category: "training",
+    title: "Фитнес-клуб «Жюль Верн»",
+    location: "Улица Удачи, 7, Адлер",
+    practical: "Три тренировки по плану. Ежедневно 08:00–22:00; перед первым визитом уточнить разовый вход.",
+    mapUrl: mapUrl("Жюль Верн, фитнес-клуб, улица Удачи, 7, Адлер"),
+    routeUrl: routeUrl(HOME, "Жюль Верн, фитнес-клуб, улица Удачи, 7, Адлер", "pd"),
+    sourceUrl: "https://jv-fit.ru/",
+    sourceLabel: "Сайт клуба",
+    phone: "+79890803888",
+  },
+  {
+    id: "orange-market",
+    category: "groceries",
+    title: "«Апельсин.Базар»",
+    location: "Улица Ленина, 156, Адлер",
+    practical: "Самая удобная точка для базовой закупки после заселения: продукты, вода и бытовые мелочи.",
+    mapUrl: mapUrl("Апельсин Базар, улица Ленина, 156, Адлер"),
+    routeUrl: routeUrl(HOME, "Апельсин Базар, улица Ленина, 156, Адлер", "pd"),
+    sourceUrl: "https://apelsin-bazar.com/",
+    sourceLabel: "Сайт рынка",
+    phone: "+79881812244",
+  },
+  {
+    id: "cheese",
+    category: "delicacies",
+    title: "«Сырные дела»",
+    location: "ТЦ «Апельсин», улица Ленина, 156",
+    practical: "Фермерские сыры, молочная продукция и мясные деликатесы. Удобно совместить с основной закупкой.",
+    mapUrl: mapUrl("Сырные дела, ТЦ Апельсин, улица Ленина, 156, Адлер"),
+    routeUrl: routeUrl(HOME, "Сырные дела, ТЦ Апельсин, улица Ленина, 156, Адлер", "pd"),
+    sourceUrl: "https://syrnyedella.ru/",
+    sourceLabel: "Сайт магазина",
+    phone: "+79186188000",
+  },
+  {
+    id: "adler-market",
+    category: "delicacies",
+    title: "Центральный Адлерский рынок",
+    location: "Демократическая улица, 38А",
+    practical: "Южные фрукты, специи, чай, сыры, орехи и чурчхела. Для свежих продуктов лучше приезжать утром.",
+    mapUrl: mapUrl("Центральный Адлерский рынок, Демократическая улица, 38А, Адлер"),
+    routeUrl: routeUrl(HOME, "Центральный Адлерский рынок, Демократическая улица, 38А, Адлер"),
+    sourceUrl: "https://adlermarket.ru/",
+    sourceLabel: "Сайт рынка",
+    phone: "+78622403310",
+  },
+  {
+    id: "rosa-souvenirs",
+    category: "souvenirs",
+    title: "Фирменные сувениры «Роза Хутор»",
+    location: "Роза Долина, Набережная Полянка, 3",
+    practical: "Покупка прямо в горный день без отдельного выезда: фирменные аксессуары и небольшие подарки.",
+    mapUrl: mapUrl("Магазин Сувениры, Набережная Полянка, 3, Роза Хутор"),
+    routeUrl: routeUrl("Роза Долина 560, Роза Хутор", "Набережная Полянка, 3, Роза Хутор", "pd"),
+    sourceUrl: "https://rosakhutor.ru/what-to-do/magazin-suveniry/",
+    sourceLabel: "Официальная карточка",
+  },
+  {
+    id: "sea-souvenirs",
+    category: "souvenirs",
+    title: "«Море сувениров»",
+    location: "Приреченская улица, 11/3, Сириус",
+    practical: "Специализированный магазин рядом с маршрутом по Сириусу. Часы лучше подтвердить звонком.",
+    mapUrl: mapUrl("Море сувениров, Приреченская улица, 11/3, Сириус"),
+    routeUrl: routeUrl("Олимпийский парк, Сириус", "Море сувениров, Приреченская улица, 11/3, Сириус", "pd"),
+    sourceUrl: "https://2gis.ru/sochi/branches/4222661521595166",
+    sourceLabel: "Карточка филиалов",
+    phone: "+79890810808",
+  },
+  {
+    id: "pontos-market",
+    category: "groceries",
+    title: "Рынок «Понтос»",
+    location: "Голубые Дали, 58/11, строение 5",
+    practical: "Запасная точка за овощами и фруктами ближе к жилому району; наличие нужных продуктов проверить на месте.",
+    mapUrl: mapUrl("Рынок Понтос, Голубые Дали, 58/11 строение 5, Адлер"),
+    routeUrl: routeUrl(HOME, "Рынок Понтос, Голубые Дали, 58/11 строение 5, Адлер", "pd"),
+  },
+  {
+    id: "date-place",
+    category: "date",
+    title: "Ресторан «Моё ты счастье»",
+    location: "Нижнеимеретинская улица, 32В, Сириус",
+    practical: "Единственный ресторанный приём пищи: бронь на 17:00–17:30, лимит до 7 000 ₽ на двоих.",
+    mapUrl: mapUrl("Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус"),
+    routeUrl: routeUrl("Олимпийский парк, Сириус", "Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус", "pd"),
+    sourceUrl: "https://moetischastie.rest/",
+    sourceLabel: "Сайт ресторана",
+    phone: "+79956123030",
+  },
+  {
+    id: "fountain",
+    category: "date",
+    title: "Поющий фонтан",
+    location: "Медальная площадь, Сириус",
+    practical: "Финал свидания 3 августа. Точное время шоу проверить утром в официальной афише.",
+    mapUrl: mapUrl("Поющий фонтан, Медальная площадь, Сириус"),
+    routeUrl: routeUrl("Моё ты счастье, Сириус", "Поющий фонтан, Медальная площадь, Сириус", "pd"),
+    sourceUrl: "https://sirius.gov.ru/afisha/",
+    sourceLabel: "Афиша территории Сириус",
+  },
+  {
+    id: "surf-treat",
+    category: "treat",
+    title: "Surf Coffee, 1100 м",
+    location: "Горная Олимпийская деревня, Медовая, 6",
+    practical: "Кофе или десерт в день Розы Хутор; не заменяет основную еду и оплачивается из конверта вкусняшек.",
+    mapUrl: mapUrl("Surf Coffee Роза Хутор 1100, улица Медовая, 6"),
+    routeUrl: routeUrl("Роза Пик 2320", "Surf Coffee Роза Хутор 1100, улица Медовая, 6", "pd"),
+    sourceUrl: "https://rosakhutor.ru/what-to-do/kofeynya-surf-coffee/",
+    sourceLabel: "Официальная карточка",
   },
 ];
 
@@ -1013,4 +1192,3 @@ export const WORKING_CEILING = BUDGET.reduce(
   (sum, row) => sum + row.amount,
   0,
 );
-
