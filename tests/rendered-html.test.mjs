@@ -215,3 +215,21 @@ test("builds a complete self-contained offline field plan", async () => {
   assert.match(appShell, /aria-live="polite"/);
   assert.match(accessibility, /\.download-control\.is-complete/);
 });
+
+test("adapts the complete interface for iPhone and large Android phones", async () => {
+  const [layout, mobile] = await Promise.all([
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/mobile-devices.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(layout, /mobile-devices\.css/);
+  assert.match(mobile, /@media \(max-width: 480px\)/);
+  assert.match(mobile, /@media \(max-width: 400px\)/);
+  assert.match(mobile, /safe-area-inset-top/);
+  assert.match(mobile, /safe-area-inset-bottom/);
+  assert.match(mobile, /min-height:\s*48px/);
+  assert.match(mobile, /overflow-x:\s*clip/);
+  assert.match(mobile, /orientation:\s*landscape/);
+  assert.match(mobile, /\.ticket-row[\s\S]*grid-template-columns:\s*24px minmax\(0,\s*1fr\)/);
+  assert.match(mobile, /\.event-catalog > article[\s\S]*grid-template-rows:\s*190px auto/);
+});

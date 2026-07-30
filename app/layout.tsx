@@ -7,6 +7,7 @@ import "./motion.css";
 import "./catalog-mechanics.css";
 import "./action-flow.css";
 import "./accessibility.css";
+import "./mobile-devices.css";
 
 export const metadata: Metadata = {
   title: {
