@@ -1,0 +1,180 @@
+/*
+ * Iteration 7 — RESPONSIVE ACCESSIBILITY
+ * Larger hit areas and clearer focus without increasing visual card scale.
+ */
+
+html {
+  scroll-padding-top: calc(var(--catalog-sticky-offset) + 16px);
+}
+
+.inline-links a,
+.ticket-row__actions a,
+.ticket-row__actions button,
+.checkout-list a,
+.event-buy {
+  min-height: 36px;
+}
+
+.inline-links a,
+.ticket-row__actions a,
+.ticket-row__actions button {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.quantity {
+  grid-template-columns: 38px 40px 38px;
+}
+
+.quantity button,
+.quantity output {
+  height: 38px;
+}
+
+.money-input:focus-within,
+.quantity:focus-within {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px var(--cyan-soft);
+}
+
+.money-input input:focus-visible {
+  outline: 0;
+}
+
+.inline-links a,
+.ticket-row__actions a,
+.ticket-row__actions button,
+.checkout-list a,
+.event-buy,
+.primary-path {
+  border-radius: 0;
+}
+
+@supports (padding: max(0px)) {
+  .topbar {
+    padding-top: max(6px, env(safe-area-inset-top, 0px));
+  }
+
+  .side-budget {
+    padding-bottom: max(9px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .page-shell {
+    padding-bottom: max(var(--atlas-gutter), calc(env(safe-area-inset-bottom, 0px) + 22px));
+  }
+
+  .mobile-day-strip.day-selector {
+    top: calc(var(--catalog-sticky-offset) + env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (min-width: 901px) {
+  .ticket-row {
+    grid-template-columns: 30px minmax(230px, 1fr) 94px 120px;
+  }
+}
+
+@media (max-width: 900px) {
+  .inline-links {
+    gap: 8px;
+  }
+
+  .inline-links a,
+  .ticket-row__actions a,
+  .ticket-row__actions button,
+  .checkout-list a,
+  .event-buy {
+    min-height: 44px;
+  }
+
+  .quantity {
+    grid-template-columns: 44px 40px 44px;
+  }
+
+  .quantity button,
+  .quantity output {
+    height: 44px;
+  }
+
+  .money-input {
+    height: 44px;
+  }
+
+  .mobile-cart-summary {
+    min-height: 44px;
+  }
+
+  .meal-matrix .flat-details summary {
+    min-height: 44px;
+  }
+
+  .schedule-list__body > p,
+  .day-meal-list__body > p,
+  .ticket-row__main > p,
+  .event-catalog__body > p:not(.eyebrow, .event-location, .event-food),
+  .guide-catalog article > div > p:last-child {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .inline-links a,
+  .ticket-row__actions a,
+  .ticket-row__actions button,
+  .checkout-list a,
+  .event-buy,
+  .cart-disclosure summary {
+    font-size: 10px;
+  }
+
+  @supports (padding: max(0px)) {
+    .mobile-cart-summary {
+      top: calc(var(--topbar) + env(safe-area-inset-top, 0px));
+    }
+
+    .side-rail {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  }
+}
+
+@media (max-width: 620px) {
+  .page-intro__lead,
+  .day-visual > div > p:last-child {
+    font-size: 13px;
+    line-height: 1.58;
+  }
+
+  .schedule-list__title b,
+  .day-meal-list__body b,
+  .event-catalog h2,
+  .guide-catalog h2 {
+    overflow-wrap: anywhere;
+  }
+
+  td::before,
+  .budget-stats span,
+  .day-selector__date small {
+    font-size: 9px;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible,
+  .money-input:focus-within,
+  .quantity:focus-within {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+
+  .day-selector button.is-active,
+  .side-nav a.is-active {
+    border: 2px solid Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

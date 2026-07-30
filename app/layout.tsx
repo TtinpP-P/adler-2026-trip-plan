@@ -6,6 +6,7 @@ import "./art-direction.css";
 import "./motion.css";
 import "./catalog-mechanics.css";
 import "./action-flow.css";
+import "./accessibility.css";
 
 export const metadata: Metadata = {
   title: {

@@ -44,7 +44,11 @@ export default function BudgetTracker() {
           <span>План <b>{formatRub(PLAN_TOTAL)}</b></span>
           <span>Резерв <b>{formatRub(WORKING_CEILING - PLAN_TOTAL)}</b></span>
           <span>Факт <b>{formatRub(actualTotal)}</b></span>
-          <span className={remaining < 0 ? "is-negative" : ""}>
+          <span
+            className={remaining < 0 ? "is-negative" : ""}
+            aria-live="polite"
+            aria-atomic="true"
+          >
             Остаток <b>{formatRub(remaining)}</b>
           </span>
         </div>

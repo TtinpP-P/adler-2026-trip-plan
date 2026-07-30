@@ -112,7 +112,9 @@ export default function TicketCenter() {
                   >
                     <Minus size={13} weight="bold" />
                   </button>
-                  <output>{quantity}</output>
+                  <output aria-live="polite" aria-atomic="true">
+                    {quantity}
+                  </output>
                   <button
                     type="button"
                     onClick={() => updateQty(ticket.id, quantity + 1)}
@@ -161,7 +163,7 @@ export default function TicketCenter() {
             </div>
           ))}
         </div>
-        <div className="cart-total">
+        <div className="cart-total" aria-live="polite" aria-atomic="true">
           <span>Билеты по плану</span>
           <b>{formatRub(total)}</b>
         </div>

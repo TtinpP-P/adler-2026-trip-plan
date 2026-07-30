@@ -77,16 +77,18 @@ test("connects the supporting pages into one contextual action flow", async () =
 });
 
 test("keeps horizontal day catalogue, official checkout handoff and five events", async () => {
-  const [data, dayCatalog, journey, tickets, css, artDirection, motion, catalogue, actionFlow] = await Promise.all([
+  const [data, dayCatalog, journey, tickets, budget, css, artDirection, motion, catalogue, actionFlow, accessibility] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/JourneyOverview.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/TicketCenter.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/BudgetTracker.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/art-direction.css", import.meta.url), "utf8"),
     readFile(new URL("../app/motion.css", import.meta.url), "utf8"),
     readFile(new URL("../app/catalog-mechanics.css", import.meta.url), "utf8"),
     readFile(new URL("../app/action-flow.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/accessibility.css", import.meta.url), "utf8"),
   ]);
 
   const featuredBlock = data.match(
@@ -158,4 +160,12 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.match(actionFlow, /\.page-intro__aside/);
   assert.match(actionFlow, /\.primary-path::before/);
   assert.match(actionFlow, /\.cart-disclosure/);
+
+  assert.match(tickets, /aria-live="polite"/);
+  assert.match(budget, /aria-live="polite"/);
+  assert.match(accessibility, /RESPONSIVE ACCESSIBILITY/);
+  assert.match(accessibility, /env\(safe-area-inset-top/);
+  assert.match(accessibility, /\.money-input:focus-within/);
+  assert.match(accessibility, /min-height:\s*44px/);
+  assert.match(accessibility, /forced-colors:\s*active/);
 });
