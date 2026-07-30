@@ -6,6 +6,7 @@ import AppShell from "../components/AppShell";
 import { NextStepLink, PageIntro, PlaceLinks } from "../components/Primitives";
 import { EVENT_COUNT, FEATURED_EVENT_IDS, PLACES } from "../data";
 import { responsiveImageProps } from "../imageMeta";
+import Link from "../sitePath";
 
 export const metadata: Metadata = {
   title: `${EVENT_COUNT} мероприятий — Адлер 2026`,
@@ -64,9 +65,9 @@ export default function EventsPage() {
                 />
               </div>
               {BUY_LINKS[place.id] ? (
-                <a className="event-buy" href={BUY_LINKS[place.id].href}>
+                <Link className="event-buy" href={BUY_LINKS[place.id].href}>
                   {BUY_LINKS[place.id].label} <ArrowRight size={15} weight="bold" />
-                </a>
+                </Link>
               ) : (
                 <span className="event-buy is-free">Вход свободный</span>
               )}

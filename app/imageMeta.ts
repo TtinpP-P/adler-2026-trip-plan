@@ -10,16 +10,27 @@ const IMAGE_META: Record<string, { width: number; height: number }> = {
   "/places/date-star.webp": { width: 1400, height: 973 },
 };
 
+const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
+
+export function assetPath(src: string) {
+  if (!BASE_PATH || !src.startsWith("/") || src.startsWith(BASE_PATH)) {
+    return src;
+  }
+
+  return `${BASE_PATH}${src}`;
+}
+
 export function responsiveImageProps(src: string) {
   const meta = IMAGE_META[src];
   if (!meta) {
-    return {};
+    return { src: assetPath(src) };
   }
 
   const mobileSrc = src.replace(/\.webp$/, "-640.webp");
   return {
+    src: assetPath(src),
     width: meta.width,
     height: meta.height,
-    srcSet: `${mobileSrc} 640w, ${src} ${meta.width}w`,
+    srcSet: `${assetPath(mobileSrc)} 640w, ${assetPath(src)} ${meta.width}w`,
   };
 }

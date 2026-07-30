@@ -11,7 +11,6 @@ import {
   Ticket,
   Wallet,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   DAYS,
@@ -24,6 +23,7 @@ import {
 } from "../data";
 import { formatRub } from "../format";
 import { responsiveImageProps } from "../imageMeta";
+import Link from "../sitePath";
 
 type JourneyPhase = "preparation" | "arrival" | "route" | "departure" | "summary";
 

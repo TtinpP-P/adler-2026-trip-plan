@@ -17,7 +17,6 @@ import {
   Wallet,
   X,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { buildOfflinePlanHtml } from "../offline-plan";
 import {
@@ -28,6 +27,7 @@ import {
   PLACES,
   WORKING_CEILING,
 } from "../data";
+import Link from "../sitePath";
 
 type Theme = "dark" | "light";
 

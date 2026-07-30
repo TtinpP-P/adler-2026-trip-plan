@@ -2,13 +2,22 @@ import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
+const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
+const routeHref = (route) =>
+  BASE_PATH ? `${BASE_PATH}${route === "/" ? "/" : `${route}/`}` : route;
+
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${path}`);
   const { default: worker } = await import(workerUrl.href);
 
+  const url = new URL(path, "http://localhost");
+  if (url.pathname !== "/" && !url.pathname.endsWith("/")) {
+    url.pathname += "/";
+  }
+
   return worker.fetch(
-    new Request(`http://localhost${path}`, {
+    new Request(url, {
       headers: { accept: "text/html" },
     }),
     {
@@ -35,8 +44,8 @@ test("server-renders the multipage Adler overview", async () => {
   assert.match(html, /Прибытие/);
   assert.match(html, /Финальная точка/);
   assert.match(html, /52[^\d]*700/);
-  assert.match(html, /href="\/plan"/);
-  assert.match(html, /href="\/tickets"/);
+  assert.ok(html.includes(`href="${routeHref("/plan")}"`));
+  assert.ok(html.includes(`href="${routeHref("/tickets")}"`));
   assert.match(html, /Скачать HTML/);
   assert.doesNotMatch(html, /Главное правило/);
   assert.doesNotMatch(html, /<footer\b/i);
@@ -61,18 +70,39 @@ test("server-renders all requested task pages", async () => {
 
 test("connects the supporting pages into one contextual action flow", async () => {
   const expectations = new Map([
-    ["/plan", 'href="/events"'],
-    ["/events", 'href="/tickets"'],
-    ["/tickets", 'href="/food"'],
-    ["/food", 'href="/guide"'],
-    ["/guide", 'href="/budget"'],
-    ["/budget", 'href="/plan"'],
+    ["/plan", `href="${routeHref("/events")}"`],
+    ["/events", `href="${routeHref("/tickets")}"`],
+    ["/tickets", `href="${routeHref("/food")}"`],
+    ["/food", `href="${routeHref("/guide")}"`],
+    ["/guide", `href="${routeHref("/budget")}"`],
+    ["/budget", `href="${routeHref("/plan")}"`],
   ]);
 
   for (const [path, nextHref] of expectations) {
     const response = await render(path);
     assert.equal(response.status, 200, path);
     assert.match(await response.text(), new RegExp(nextHref), path);
+  }
+});
+
+test("exports every public page as a standalone static document", async () => {
+  const files = [
+    "index.html",
+    "plan/index.html",
+    "events/index.html",
+    "tickets/index.html",
+    "food/index.html",
+    "guide/index.html",
+    "budget/index.html",
+  ];
+
+  for (const file of files) {
+    const html = await readFile(new URL(`../dist/client/${file}`, import.meta.url), "utf8");
+    assert.match(html, /<main\b/);
+    assert.ok(html.length > 10_000, `${file} is unexpectedly small`);
+    if (BASE_PATH) {
+      assert.match(html, new RegExp(`${BASE_PATH.replaceAll("/", "\\/")}\\/assets\\/`));
+    }
   }
 });
 

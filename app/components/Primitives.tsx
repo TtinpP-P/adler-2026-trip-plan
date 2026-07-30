@@ -7,7 +7,7 @@ import {
   NavigationArrow,
   Phone,
 } from "@phosphor-icons/react";
-import Link from "next/link";
+import Link from "../sitePath";
 
 export function PageIntro({
   eyebrow,

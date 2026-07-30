@@ -8,6 +8,7 @@ import "./catalog-mechanics.css";
 import "./action-flow.css";
 import "./accessibility.css";
 import "./mobile-devices.css";
+import { assetPath } from "./imageMeta";
 
 export const metadata: Metadata = {
   title: {
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
   description:
     "Многостраничный план поездки с маршрутом по дням, билетами, едой, адресами и сметой.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: assetPath("/favicon.svg"),
+    shortcut: assetPath("/favicon.svg"),
   },
 };
 
