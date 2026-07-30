@@ -85,11 +85,59 @@ export default function DayCatalog() {
     });
   };
 
-  const selectDay = (id: string) => {
+  const revealSelectedDay = (id: string) => {
+    window.requestAnimationFrame(() => {
+      const panel = document.getElementById(`day-panel-${id}`);
+      if (!panel) {
+        return;
+      }
+      const bounds = panel.getBoundingClientRect();
+      if (bounds.top < 150 || bounds.top > window.innerHeight * 0.58) {
+        panel.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      }
+    });
+  };
+
+  const selectDay = (id: string, reveal = true) => {
     setOpenDay(id);
     const url = new URL(window.location.href);
     url.searchParams.set("day", id);
     window.history.replaceState({}, "", url);
+    if (reveal) {
+      revealSelectedDay(id);
+    }
+  };
+
+  const handleDayKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % DAYS.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + DAYS.length) % DAYS.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = DAYS.length - 1;
+    }
+
+    if (nextIndex === null) {
+      return;
+    }
+
+    event.preventDefault();
+    const nextDay = DAYS[nextIndex];
+    selectDay(nextDay.id, false);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`day-tab-${nextDay.id}`)?.focus();
+    });
   };
 
   const activeDay = DAYS.find((day) => day.id === openDay) ?? DAYS[0];
@@ -99,21 +147,52 @@ export default function DayCatalog() {
       <p className="sr-only" aria-live="polite">
         Открыт план: {activeDay.shortDate}, {activeDay.title}
       </p>
-      <nav className="mobile-day-strip" aria-label="Быстрый выбор дня">
-        {DAYS.map((day) => (
-          <button
-            key={day.id}
-            type="button"
-            className={openDay === day.id ? "is-active" : ""}
-            aria-current={openDay === day.id ? "date" : undefined}
-            onClick={() => selectDay(day.id)}
-          >
-            <b>{DAY_CODES[day.weekday] ?? day.weekday.slice(0, 2)}</b>
-            <small>{day.shortDate.replace(" авг", "")}</small>
-          </button>
-        ))}
+      <nav
+        className="day-selector mobile-day-strip"
+        aria-label="Выбор дня маршрута"
+        role="tablist"
+        aria-orientation="horizontal"
+      >
+        {DAYS.map((day, index) => {
+          const isActive = openDay === day.id;
+          const total = day.timeline.length + day.meals.length;
+          const completed = [...day.timeline, ...day.meals].filter(
+            (item) => checks[item.id],
+          ).length;
+
+          return (
+            <button
+              key={day.id}
+              id={`day-tab-${day.id}`}
+              type="button"
+              role="tab"
+              className={isActive ? "is-active" : ""}
+              aria-selected={isActive}
+              aria-controls={`day-panel-${day.id}`}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => selectDay(day.id)}
+              onKeyDown={(event) => handleDayKeyDown(event, index)}
+            >
+              <span className="day-selector__index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="day-selector__date">
+                <b>{DAY_CODES[day.weekday] ?? day.weekday.slice(0, 2)}</b>
+                <small>{day.shortDate.replace(" авг", "")}</small>
+              </span>
+              <span className="day-selector__summary">
+                <b>{day.title}</b>
+                <small>
+                  {total} пунктов · {day.budget}
+                  {completed ? ` · ${completed} готово` : ""}
+                </small>
+              </span>
+              <span className="day-selector__route" aria-hidden="true" />
+            </button>
+          );
+        })}
       </nav>
-      {DAYS.map((day, index) => {
+      {DAYS.map((day) => {
         const isOpen = openDay === day.id;
         const timeline = [...day.timeline].sort(
           (a, b) => toMinutes(a.time) - toMinutes(b.time),
@@ -126,31 +205,16 @@ export default function DayCatalog() {
           (a, b) => toMinutes(a.time) - toMinutes(b.time),
         )[0];
         const stops = routeStops(timeline);
-        const completed = allItems.filter((item) => checks[item.id]).length;
-
         return (
-          <section className={`day-row${isOpen ? " is-open" : ""}`} key={day.id}>
-            <button
-              className="day-row__trigger"
-              type="button"
-              aria-expanded={isOpen}
-              aria-controls={`day-${day.id}`}
-              onClick={() => selectDay(day.id)}
-            >
-              <span className="day-row__number">{String(index + 1).padStart(2, "0")}</span>
-              <span className="day-row__code">{DAY_CODES[day.weekday] ?? day.weekday.slice(0, 2)}</span>
-              <span className="day-row__date">{day.shortDate}</span>
-              <span className="day-row__summary">
-                <b>{day.title}</b>
-                <small>
-                  {allItems.length} пунктов · {day.budget}
-                  {completed ? ` · ${completed} готово` : ""}
-                </small>
-              </span>
-              <CaretDown size={18} weight="bold" />
-            </button>
-
-            <div className="day-row__reveal" id={`day-${day.id}`}>
+          <section
+            className={`day-row${isOpen ? " is-open" : ""}`}
+            id={`day-panel-${day.id}`}
+            role="tabpanel"
+            aria-labelledby={`day-tab-${day.id}`}
+            hidden={!isOpen}
+            key={day.id}
+          >
+            <div className="day-row__reveal">
               <div className="day-row__inner">
                 <div className="day-visual">
                   <img

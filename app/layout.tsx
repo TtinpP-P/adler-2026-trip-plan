@@ -4,6 +4,7 @@ import "@fontsource-variable/raleway";
 import "./globals.css";
 import "./art-direction.css";
 import "./motion.css";
+import "./catalog-mechanics.css";
 
 export const metadata: Metadata = {
   title: {

@@ -60,7 +60,7 @@ test("server-renders all requested task pages", async () => {
 });
 
 test("keeps horizontal day catalogue, official checkout handoff and five events", async () => {
-  const [data, dayCatalog, journey, tickets, css, artDirection, motion] = await Promise.all([
+  const [data, dayCatalog, journey, tickets, css, artDirection, motion, catalogue] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/JourneyOverview.tsx", import.meta.url), "utf8"),
@@ -68,6 +68,7 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/art-direction.css", import.meta.url), "utf8"),
     readFile(new URL("../app/motion.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/catalog-mechanics.css", import.meta.url), "utf8"),
   ]);
 
   const featuredBlock = data.match(
@@ -78,7 +79,11 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.doesNotMatch(data, /Олимпийский парк|Поющий фонтан|Сочи Парк/);
 
   assert.match(dayCatalog, /DAY_CODES/);
-  assert.match(dayCatalog, /aria-expanded/);
+  assert.match(dayCatalog, /role="tablist"/);
+  assert.match(dayCatalog, /aria-selected=\{isActive\}/);
+  assert.match(dayCatalog, /role="tabpanel"/);
+  assert.match(dayCatalog, /hidden=\{!isOpen\}/);
+  assert.match(dayCatalog, /event\.key === "ArrowRight"/);
   assert.match(dayCatalog, /day-route__track/);
   assert.match(dayCatalog, /day-content__grid/);
   assert.match(dayCatalog, /3 приёма пищи/);
@@ -121,4 +126,12 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.match(motion, /\.journey-track::before[\s\S]*atlas-route-draw/);
   assert.match(motion, /\.day-row\.is-open \.day-route__track/);
   assert.match(motion, /prefers-reduced-motion:\s*reduce/);
+
+  assert.match(catalogue, /DAY CATALOGUE MECHANICS/);
+  assert.match(catalogue, /\.day-catalog\s*\{[\s\S]*display:\s*block/);
+  assert.match(catalogue, /\.day-row__inner,[\s\S]*overflow:\s*visible/);
+  assert.match(catalogue, /@media \(min-width: 1181px\)[\s\S]*display:\s*flex/);
+  assert.match(catalogue, /\.day-selector button\.is-active\s*\{[\s\S]*flex:\s*3\.25/);
+  assert.match(catalogue, /grid-template-columns:\s*repeat\(4/);
+  assert.match(catalogue, /prefers-reduced-motion:\s*reduce/);
 });

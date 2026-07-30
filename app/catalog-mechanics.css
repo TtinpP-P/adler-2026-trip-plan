@@ -1,0 +1,271 @@
+/*
+ * Iteration 5 — DAY CATALOGUE MECHANICS
+ * The selector controls one natural-flow panel. No nested page-sized scroll area.
+ */
+
+:root {
+  --catalog-sticky-offset: 66px;
+  --catalog-switch: 360ms var(--ease-out-ui);
+}
+
+.day-catalog {
+  display: block;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+}
+
+.mobile-day-strip.day-selector {
+  position: sticky;
+  z-index: 30;
+  top: var(--catalog-sticky-offset);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 112px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: none;
+}
+
+.day-selector button {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  align-content: center;
+  align-items: center;
+  justify-items: stretch;
+  padding: 8px 10px;
+  overflow: hidden;
+  color: var(--faint);
+  text-align: left;
+  background: var(--surface);
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.day-selector button:nth-child(4n) {
+  border-right: 0;
+}
+
+.day-selector button:nth-child(n + 5) {
+  border-bottom: 0;
+}
+
+.day-selector button.is-active {
+  color: var(--text);
+  background:
+    linear-gradient(90deg, var(--cyan-soft), transparent 82%),
+    var(--surface-2);
+}
+
+.day-selector button.is-active::before {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  content: "";
+  background: var(--cyan);
+}
+
+.day-selector__index {
+  color: var(--faint);
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.day-selector__date,
+.day-selector__summary,
+.day-selector__date b,
+.day-selector__date small,
+.day-selector__summary b,
+.day-selector__summary small {
+  display: block;
+  min-width: 0;
+}
+
+.day-selector__date b {
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.day-selector__date small {
+  margin-top: 1px;
+  color: var(--faint);
+  font-family: var(--font-data);
+  font-size: 8px;
+}
+
+.day-selector__summary {
+  display: none;
+}
+
+.day-selector__route {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  height: 1px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.day-selector__route::after {
+  display: block;
+  width: 0;
+  height: 100%;
+  content: "";
+  background: var(--cyan);
+  transition: width var(--catalog-switch);
+}
+
+.day-selector button.is-active .day-selector__route::after {
+  width: 100%;
+}
+
+.day-row[hidden] {
+  display: none !important;
+}
+
+.day-row,
+.day-row.is-open {
+  display: block;
+  min-width: 0;
+  overflow: visible;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.day-row__reveal,
+.day-row.is-open .day-row__reveal {
+  display: block;
+  width: auto;
+  min-width: 0;
+  overflow: visible;
+  opacity: 1;
+}
+
+.day-row__inner,
+.day-row.is-open .day-row__inner {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.day-row.is-open {
+  scroll-margin-top: calc(var(--catalog-sticky-offset) + 126px);
+}
+
+@media (min-width: 1181px) {
+  .mobile-day-strip.day-selector {
+    display: flex;
+    min-height: 96px;
+  }
+
+  .day-selector button {
+    min-width: 68px;
+    min-height: 94px;
+    flex: 1 1 68px;
+    grid-template-columns: 24px 38px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 0;
+    transition:
+      flex-basis var(--catalog-switch),
+      flex-grow var(--catalog-switch),
+      color var(--motion-feedback) ease,
+      background-color var(--motion-feedback) ease;
+  }
+
+  .day-selector button:nth-child(4n) {
+    border-right: 1px solid var(--line);
+  }
+
+  .day-selector button:last-child {
+    border-right: 0;
+  }
+
+  .day-selector button.is-active {
+    flex: 3.25 1 310px;
+  }
+
+  .day-selector__summary {
+    display: block;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+      opacity var(--motion-feedback) ease 90ms,
+      transform var(--motion-enter) var(--ease-out-ui) 90ms;
+  }
+
+  .day-selector button.is-active .day-selector__summary {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .day-selector__summary b,
+  .day-selector__summary small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .day-selector__summary b {
+    color: var(--text);
+    font-size: 11px;
+  }
+
+  .day-selector__summary small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-family: var(--font-data);
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 620px) {
+  :root {
+    --catalog-sticky-offset: 58px;
+  }
+
+  .mobile-day-strip.day-selector {
+    min-height: 104px;
+    margin-right: calc(var(--atlas-gutter) * -1);
+    margin-left: calc(var(--atlas-gutter) * -1);
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .day-selector button {
+    min-height: 52px;
+    padding: 7px 9px;
+  }
+
+  .day-row.is-open {
+    scroll-margin-top: calc(var(--catalog-sticky-offset) + 116px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-selector button,
+  .day-selector__summary,
+  .day-selector__route::after {
+    transition: none;
+  }
+}
