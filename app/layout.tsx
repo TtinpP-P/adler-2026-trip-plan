@@ -4,9 +4,12 @@ import "@fontsource-variable/raleway";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Адлер 2026 — интерактивный план",
+  title: {
+    default: "Адлер 2026 — интерактивный план",
+    template: "%s",
+  },
   description:
-    "Персональный план поездки с маршрутами, едой, каталогом мест и бюджетом.",
+    "Многостраничный план поездки с маршрутом по дням, билетами, едой, адресами и сметой.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

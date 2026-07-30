@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${path}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", {
+    new Request(`http://localhost${path}`, {
       headers: { accept: "text/html" },
     }),
     {
@@ -23,27 +23,43 @@ async function render() {
   );
 }
 
-test("server-renders the compact Adler trip planner", async () => {
-  const response = await render();
+test("server-renders the multipage Adler overview", async () => {
+  const response = await render("/");
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /Адлер 2026 — интерактивный план поездки/);
-  assert.match(html, /Все 6 мероприятий/);
+  assert.match(html, /Вся поездка — без длинного единого экрана/);
   assert.match(html, /55[^\d]*300/);
-  assert.match(html, /Продукты, деликатесы, сувениры и важные точки/);
+  assert.match(html, /href="\/plan"/);
+  assert.match(html, /href="\/tickets"/);
   assert.match(html, /Скачать HTML/);
-  assert.doesNotMatch(html, /Открыть ближайший день/);
-  assert.doesNotMatch(html, /Скачать офлайн/);
   assert.doesNotMatch(html, /Главное правило/);
   assert.doesNotMatch(html, /<footer\b/i);
 });
 
-test("keeps six main events and all practical link categories in source", async () => {
-  const [planner, data, css] = await Promise.all([
-    readFile(new URL("../app/TripPlanner.tsx", import.meta.url), "utf8"),
+test("server-renders all requested task pages", async () => {
+  const expectations = new Map([
+    ["/plan", /Каталог маршрута/],
+    ["/events", /Шесть мероприятий/],
+    ["/tickets", /Билеты и бронь/],
+    ["/food", /Питание по дням/],
+    ["/guide", /Адреса без дополнительного поиска/],
+    ["/budget", /План и фактические траты/],
+  ]);
+
+  for (const [path, pattern] of expectations) {
+    const response = await render(path);
+    assert.equal(response.status, 200, path);
+    assert.match(await response.text(), pattern, path);
+  }
+});
+
+test("keeps horizontal day catalogue, official checkout handoff and six events", async () => {
+  const [data, dayCatalog, tickets, css] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/TicketCenter.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
@@ -53,21 +69,16 @@ test("keeps six main events and all practical link categories in source", async 
   assert.ok(featuredBlock);
   assert.equal((featuredBlock[1].match(/"[^"]+"/g) ?? []).length, 6);
 
-  for (const value of [
-    "Тисо-самшитовая роща",
-    "Жюль Верн",
-    "Апельсин.Базар",
-    "Центральный Адлерский рынок",
-    "Море сувениров",
-    "Сырные дела",
-  ]) {
-    assert.match(data, new RegExp(value));
-  }
+  assert.match(dayCatalog, /DAY_CODES/);
+  assert.match(dayCatalog, /aria-expanded/);
+  assert.match(css, /\.day-catalog\s*\{[\s\S]*display:\s*flex/);
+  assert.match(css, /\.day-row\.is-open[\s\S]*flex:\s*1 1/);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-rows:\s*0fr/);
 
-  assert.match(planner, /sidebarCollapsed/);
-  assert.match(planner, /dataset\.theme/);
+  assert.match(tickets, /https:\/\/skypark\.ru\//);
+  assert.match(tickets, /https:\/\/rosakhutor\.ru\/tickets\//);
+  assert.match(tickets, /официального продавца/);
+  assert.match(tickets, /localStorage/);
   assert.match(css, /\[data-theme="light"\]/);
   assert.match(css, /prefers-reduced-motion/);
-  assert.doesNotMatch(planner, /\bPrinter\b/);
-  assert.doesNotMatch(planner, /<footer\b/);
 });
