@@ -7,6 +7,12 @@ html {
   scroll-padding-top: calc(var(--catalog-sticky-offset) + 16px);
 }
 
+.download-control.is-complete {
+  color: #071014;
+  background: var(--lime);
+  border-color: var(--lime);
+}
+
 .inline-links a,
 .ticket-row__actions a,
 .ticket-row__actions button,

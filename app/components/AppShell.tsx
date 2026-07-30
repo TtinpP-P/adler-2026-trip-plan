@@ -2,6 +2,7 @@
 
 import {
   CalendarBlank,
+  Check,
   Compass,
   DownloadSimple,
   ForkKnife,
@@ -18,6 +19,7 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { buildOfflinePlanHtml } from "../offline-plan";
 import {
   BUDGET,
   DAYS,
@@ -43,6 +45,7 @@ const formatRub = (value: number) =>
   `${new Intl.NumberFormat("ru-RU").format(value)} ₽`;
 
 function downloadOfflinePlan() {
+  const completeHtml = buildOfflinePlanHtml();
   const eventIds = new Set<string>(FEATURED_EVENT_IDS);
   const events = PLACES.filter((place) => eventIds.has(place.id));
   const esc = (value: string) =>
@@ -85,11 +88,12 @@ function downloadOfflinePlan() {
       `<tr><td>${esc(row.category)}</td><td>${esc(row.calculation)}</td><td>${formatRub(row.amount)}</td></tr>`,
   ).join("")}</table></section></body></html>`;
 
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  void html;
+  const blob = new Blob([completeHtml], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "Адлер_2026_офлайн.html";
+  link.download = "Адлер_2026_автономный_план.html";
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -108,6 +112,7 @@ export default function AppShell({
   const [theme, setTheme] = useState<Theme>("dark");
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -137,6 +142,12 @@ export default function AppShell({
       localStorage.setItem("adler-sidebar-collapsed", String(!current));
       return !current;
     });
+  };
+
+  const handleDownload = () => {
+    downloadOfflinePlan();
+    setDownloaded(true);
+    window.setTimeout(() => setDownloaded(false), 2400);
   };
 
   return (
@@ -213,9 +224,19 @@ export default function AppShell({
             >
               {theme === "dark" ? <Sun size={19} weight="bold" /> : <Moon size={19} weight="fill" />}
             </button>
-            <button className="download-control" type="button" onClick={downloadOfflinePlan}>
-              <DownloadSimple size={18} weight="bold" />
-              <span>Скачать HTML</span>
+            <button
+              className={`download-control${downloaded ? " is-complete" : ""}`}
+              type="button"
+              onClick={handleDownload}
+              aria-live="polite"
+              aria-label={downloaded ? "HTML-файл скачан" : "Скачать автономный HTML"}
+            >
+              {downloaded ? (
+                <Check size={18} weight="bold" />
+              ) : (
+                <DownloadSimple size={18} weight="bold" />
+              )}
+              <span>{downloaded ? "HTML скачан" : "Скачать HTML"}</span>
             </button>
           </div>
         </header>

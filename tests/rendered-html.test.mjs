@@ -192,3 +192,26 @@ test("ships responsive WebP photography within the mobile asset budget", async (
   assert.match(imageMeta, /width:\s*1280/);
   assert.match(imageMeta, /height:\s*960/);
 });
+
+test("builds a complete self-contained offline field plan", async () => {
+  const [offlinePlan, appShell, accessibility] = await Promise.all([
+    readFile(new URL("../app/offline-plan.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/AppShell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/accessibility.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(offlinePlan, /PRACTICAL_PLACES/);
+  assert.match(offlinePlan, /TICKETS/);
+  assert.match(offlinePlan, /href="#days"/);
+  assert.match(offlinePlan, /href="#budget"/);
+  assert.match(offlinePlan, /@media print/);
+  assert.match(offlinePlan, /tel:\$\{place\.phone\}/);
+  assert.match(offlinePlan, /meal\.pack/);
+  assert.match(offlinePlan, /row\.note/);
+  assert.doesNotMatch(offlinePlan, /<img\b/);
+
+  assert.match(appShell, /buildOfflinePlanHtml/);
+  assert.match(appShell, /HTML скачан/);
+  assert.match(appShell, /aria-live="polite"/);
+  assert.match(accessibility, /\.download-control\.is-complete/);
+});
