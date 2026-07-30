@@ -1,13 +1,11 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { DAYS } from "../app/data";
 import { buildOfflinePlanHtml } from "../app/offline-plan";
 
-const outputPath = resolve(
-  process.cwd(),
-  "..",
-  "Адлер_2026_ФИНАЛЬНЫЙ_САЙТ.html",
-);
+const outputPath = process.env.HTML_OUTPUT
+  ? resolve(process.cwd(), process.env.HTML_OUTPUT)
+  : resolve(process.cwd(), "..", "Адлер_2026_ФИНАЛЬНЫЙ_САЙТ.html");
 
 const images = await Promise.all(
   DAYS.map(async (day) => {
@@ -38,5 +36,6 @@ html = html.replace(
   </style>`,
 );
 
+await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, html, "utf8");
 console.log(outputPath);
