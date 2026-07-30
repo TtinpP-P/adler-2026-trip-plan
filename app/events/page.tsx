@@ -32,7 +32,7 @@ export default function EventsPage() {
         {events.map((place, index) => (
           <article id={place.id} key={place.id}>
             <div className="event-catalog__image">
-              <img src={place.image} alt={place.imageAlt} />
+              <img src={place.image} alt={place.imageAlt} loading="lazy" decoding="async" />
               <span>{String(index + 1).padStart(2, "0")}</span>
             </div>
             <div className="event-catalog__body">

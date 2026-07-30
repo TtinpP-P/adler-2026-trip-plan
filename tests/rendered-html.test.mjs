@@ -60,12 +60,13 @@ test("server-renders all requested task pages", async () => {
 });
 
 test("keeps horizontal day catalogue, official checkout handoff and five events", async () => {
-  const [data, dayCatalog, journey, tickets, css] = await Promise.all([
+  const [data, dayCatalog, journey, tickets, css, artDirection] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/JourneyOverview.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/TicketCenter.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/art-direction.css", import.meta.url), "utf8"),
   ]);
 
   const featuredBlock = data.match(
@@ -103,4 +104,12 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.match(tickets, /localStorage/);
   assert.match(css, /\[data-theme="light"\]/);
   assert.match(css, /prefers-reduced-motion/);
+
+  assert.match(artDirection, /FIELD ATLAS/);
+  assert.match(artDirection, /--atlas-topo-line/);
+  assert.match(artDirection, /\.journey-focus__media\s*\{[\s\S]*position:\s*absolute/);
+  assert.match(artDirection, /\.day-visual\s*\{[\s\S]*min-height:\s*340px/);
+  assert.match(artDirection, /\.event-catalog > article:first-child/);
+  assert.match(artDirection, /\.day-route__track > li:not\(:last-child\)::after/);
+  assert.match(artDirection, /@media \(max-width: 620px\)/);
 });

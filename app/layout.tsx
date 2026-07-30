@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@fontsource-variable/lora";
 import "@fontsource-variable/raleway";
 import "./globals.css";
+import "./art-direction.css";
 
 export const metadata: Metadata = {
   title: {

@@ -239,7 +239,7 @@ export default function JourneyOverview() {
     <div className="journey-overview">
       <section className="journey-focus" aria-labelledby="journey-heading">
         <div className="journey-focus__media">
-          <img src={image} alt={imageAlt} />
+          <img src={image} alt={imageAlt} fetchPriority="high" decoding="async" />
           <div className="journey-focus__image-meta">
             <span>01–08 AUG</span>
             <span>{String(phaseIndex + 1).padStart(2, "0")} / 05</span>
@@ -304,7 +304,9 @@ export default function JourneyOverview() {
               key={stage.id}
             >
               <span className="journey-track__marker">
-                {isComplete ? <Check size={13} weight="bold" /> : String(index + 1).padStart(2, "0")}
+                <span>
+                  {isComplete ? <Check size={13} weight="bold" /> : String(index + 1).padStart(2, "0")}
+                </span>
               </span>
               <span>
                 <b>{stage.label}</b>
@@ -318,7 +320,7 @@ export default function JourneyOverview() {
       <div className="journey-followup">
         {nextDay ? (
           <Link className="next-chapter" href={`/plan?day=${nextDay.id}`}>
-            <img src={nextDay.image} alt="" />
+            <img src={nextDay.image} alt="" loading="lazy" decoding="async" />
             <span className="next-chapter__veil" />
             <span className="next-chapter__copy">
               <small>Следующая глава · {nextDay.shortDate}</small>

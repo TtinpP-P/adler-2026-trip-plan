@@ -148,7 +148,12 @@ export default function DayCatalog() {
             <div className="day-row__reveal" id={`day-${day.id}`}>
               <div className="day-row__inner">
                 <div className="day-visual">
-                  <img src={day.image} alt={day.imageAlt} />
+                  <img
+                    src={day.image}
+                    alt={day.imageAlt}
+                    loading={isOpen ? "eager" : "lazy"}
+                    decoding="async"
+                  />
                   <div>
                     <div className="day-visual__label">
                       <span>01</span>
