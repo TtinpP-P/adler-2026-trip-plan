@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  CaretDown,
   Check,
   CheckCircle,
   Minus,
@@ -164,10 +165,6 @@ export default function TicketCenter() {
           <span>Билеты по плану</span>
           <b>{formatRub(total)}</b>
         </div>
-        <p className="cart-note">
-          Выбор и расчёт остаются здесь. Оплата открывается у официального продавца: так данные карты
-          не попадают на личный сайт поездки.
-        </p>
         <div className="checkout-list">
           {onlineSelected.map((ticket) => (
             <a href={ticket.href} target="_blank" rel="noreferrer" key={ticket.id}>
@@ -177,6 +174,16 @@ export default function TicketCenter() {
             </a>
           ))}
         </div>
+        <details className="cart-disclosure">
+          <summary>
+            Как проходит оплата
+            <CaretDown size={15} weight="bold" />
+          </summary>
+          <p className="cart-note">
+            Выбор и расчёт остаются здесь. Оплата открывается у официального продавца:
+            данные карты не попадают на сайт поездки.
+          </p>
+        </details>
       </aside>
       </div>
     </>

@@ -59,8 +59,25 @@ test("server-renders all requested task pages", async () => {
   }
 });
 
+test("connects the supporting pages into one contextual action flow", async () => {
+  const expectations = new Map([
+    ["/plan", 'href="/events"'],
+    ["/events", 'href="/tickets"'],
+    ["/tickets", 'href="/food"'],
+    ["/food", 'href="/guide"'],
+    ["/guide", 'href="/budget"'],
+    ["/budget", 'href="/plan"'],
+  ]);
+
+  for (const [path, nextHref] of expectations) {
+    const response = await render(path);
+    assert.equal(response.status, 200, path);
+    assert.match(await response.text(), new RegExp(nextHref), path);
+  }
+});
+
 test("keeps horizontal day catalogue, official checkout handoff and five events", async () => {
-  const [data, dayCatalog, journey, tickets, css, artDirection, motion, catalogue] = await Promise.all([
+  const [data, dayCatalog, journey, tickets, css, artDirection, motion, catalogue, actionFlow] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/JourneyOverview.tsx", import.meta.url), "utf8"),
@@ -69,6 +86,7 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
     readFile(new URL("../app/art-direction.css", import.meta.url), "utf8"),
     readFile(new URL("../app/motion.css", import.meta.url), "utf8"),
     readFile(new URL("../app/catalog-mechanics.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/action-flow.css", import.meta.url), "utf8"),
   ]);
 
   const featuredBlock = data.match(
@@ -134,4 +152,10 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.match(catalogue, /\.day-selector button\.is-active\s*\{[\s\S]*flex:\s*3\.25/);
   assert.match(catalogue, /grid-template-columns:\s*repeat\(4/);
   assert.match(catalogue, /prefers-reduced-motion:\s*reduce/);
+
+  assert.match(tickets, /cart-disclosure/);
+  assert.match(actionFlow, /CONTEXTUAL ACTION FLOW/);
+  assert.match(actionFlow, /\.page-intro__aside/);
+  assert.match(actionFlow, /\.primary-path::before/);
+  assert.match(actionFlow, /\.cart-disclosure/);
 });

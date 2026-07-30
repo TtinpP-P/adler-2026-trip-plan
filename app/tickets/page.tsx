@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import AppShell from "../components/AppShell";
-import { PageIntro } from "../components/Primitives";
+import { NextStepLink, PageIntro } from "../components/Primitives";
 import TicketCenter from "../components/TicketCenter";
 
 export const metadata: Metadata = {
@@ -14,6 +14,11 @@ export default function TicketsPage() {
         eyebrow="Выбор → расчёт → официальный продавец"
         title="Билеты и бронь"
         lead="Количество и общий бюджет считаются здесь. Для защищённой оплаты сайт переводит ровно на официальную форму выбранного места."
+        aside={
+          <NextStepLink href="/food" step="Дальше · 04">
+            Сверить питание
+          </NextStepLink>
+        }
       />
       <div className="booking-steps" aria-label="Этапы покупки">
         <span className="is-active"><b>01</b> Выбрать</span>

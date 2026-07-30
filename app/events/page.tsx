@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import { ArrowRight, MapPin } from "../components/UiIcons";
 import AppShell from "../components/AppShell";
-import { PageIntro, PlaceLinks } from "../components/Primitives";
+import { NextStepLink, PageIntro, PlaceLinks } from "../components/Primitives";
 import { EVENT_COUNT, FEATURED_EVENT_IDS, PLACES } from "../data";
 
 export const metadata: Metadata = {
@@ -27,6 +27,11 @@ export default function EventsPage() {
         eyebrow="Утверждённый маршрут"
         title={`${EVENT_COUNT} мероприятий — все на одном экране`}
         lead="Без фильтров и запасных карточек: только те места, которые входят в поездку, с картой, маршрутом и покупкой."
+        aside={
+          <NextStepLink href="/tickets" step="Дальше · 03">
+            Выбрать билеты
+          </NextStepLink>
+        }
       />
       <section className="event-catalog">
         {events.map((place, index) => (

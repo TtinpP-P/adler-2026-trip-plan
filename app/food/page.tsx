@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ForkKnife, MapPin } from "../components/UiIcons";
 import AppShell from "../components/AppShell";
-import { PageIntro, PlaceLinks } from "../components/Primitives";
+import { NextStepLink, PageIntro, PlaceLinks } from "../components/Primitives";
 import { DAYS } from "../data";
 
 export const metadata: Metadata = {
@@ -25,6 +25,11 @@ export default function FoodPage() {
         eyebrow="Своя еда · свидание · вкусняшки"
         title="Питание по дням"
         lead="Завтрак, обед и ужин привязаны к реальному маршруту. Ресторан — только на свидании 3 августа; кофе и десерты идут отдельным конвертом."
+        aside={
+          <NextStepLink href="/guide" step="Дальше · 05">
+            Адреса по маршруту
+          </NextStepLink>
+        }
       />
       <section className="meal-matrix">
         {DAYS.map((day) => (

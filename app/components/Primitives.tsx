@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  ArrowRight,
   ArrowSquareOut,
   MapPin,
   NavigationArrow,
   Phone,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 
 export function PageIntro({
   eyebrow,
@@ -27,6 +29,26 @@ export function PageIntro({
       </div>
       {aside ? <div className="page-intro__aside">{aside}</div> : null}
     </header>
+  );
+}
+
+export function NextStepLink({
+  href,
+  step,
+  children,
+}: {
+  href: string;
+  step: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link className="primary-path" href={href}>
+      <span>
+        <small>{step}</small>
+        <b>{children}</b>
+      </span>
+      <ArrowRight size={18} weight="bold" aria-hidden="true" />
+    </Link>
   );
 }
 

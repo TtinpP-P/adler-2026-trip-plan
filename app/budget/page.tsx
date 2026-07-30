@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import AppShell from "../components/AppShell";
 import BudgetTracker from "../components/BudgetTracker";
-import { PageIntro } from "../components/Primitives";
+import { NextStepLink, PageIntro } from "../components/Primitives";
 import { WORKING_CEILING } from "../data";
 import { formatRub } from "../format";
 
@@ -16,6 +16,11 @@ export default function BudgetPage() {
         eyebrow={`Потолок ${formatRub(WORKING_CEILING)}`}
         title="План и фактические траты"
         lead="Каждая сумма привязана к расчёту. Вносите факт по мере поездки — остаток обновится автоматически."
+        aside={
+          <NextStepLink href="/plan" step="К маршруту · 01">
+            Открыть дни поездки
+          </NextStepLink>
+        }
       />
       <BudgetTracker />
     </AppShell>

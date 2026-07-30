@@ -8,7 +8,7 @@ import {
   Storefront,
 } from "../components/UiIcons";
 import AppShell from "../components/AppShell";
-import { PageIntro, PlaceLinks } from "../components/Primitives";
+import { NextStepLink, PageIntro, PlaceLinks } from "../components/Primitives";
 import { PRACTICAL_PLACES, type PracticalPlaceCategory } from "../data";
 
 export const metadata: Metadata = {
@@ -34,6 +34,11 @@ export default function GuidePage() {
         eyebrow="Магазины и важные точки"
         title="Адреса без дополнительного поиска"
         lead="Продукты, местные деликатесы, сувениры, зал, свидание и вкусняшки — с конкретными адресами и маршрутом из плана."
+        aside={
+          <NextStepLink href="/budget" step="Финал · 06">
+            Проверить смету
+          </NextStepLink>
+        }
       />
       <section className="guide-catalog">
         {PRACTICAL_PLACES.map((place, index) => {
