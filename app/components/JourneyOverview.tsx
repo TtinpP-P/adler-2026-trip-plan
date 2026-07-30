@@ -23,6 +23,7 @@ import {
   type TripDay,
 } from "../data";
 import { formatRub } from "../format";
+import { responsiveImageProps } from "../imageMeta";
 
 type JourneyPhase = "preparation" | "arrival" | "route" | "departure" | "summary";
 
@@ -239,7 +240,14 @@ export default function JourneyOverview() {
     <div className="journey-overview">
       <section className="journey-focus" aria-labelledby="journey-heading">
         <div className="journey-focus__media">
-          <img src={image} alt={imageAlt} fetchPriority="high" decoding="async" />
+          <img
+            src={image}
+            alt={imageAlt}
+            fetchPriority="high"
+            decoding="async"
+            sizes="(max-width: 620px) 100vw, calc(100vw - 72px)"
+            {...responsiveImageProps(image)}
+          />
           <div className="journey-focus__image-meta">
             <span>01–08 AUG</span>
             <span>{String(phaseIndex + 1).padStart(2, "0")} / 05</span>
@@ -320,7 +328,14 @@ export default function JourneyOverview() {
       <div className="journey-followup">
         {nextDay ? (
           <Link className="next-chapter" href={`/plan?day=${nextDay.id}`}>
-            <img src={nextDay.image} alt="" loading="lazy" decoding="async" />
+            <img
+              src={nextDay.image}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              sizes="(max-width: 900px) 100vw, 65vw"
+              {...responsiveImageProps(nextDay.image)}
+            />
             <span className="next-chapter__veil" />
             <span className="next-chapter__copy">
               <small>Следующая глава · {nextDay.shortDate}</small>

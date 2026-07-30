@@ -154,7 +154,7 @@ export const DAYS: TripDay[] = [
     title: "Заселиться и спокойно настроить базу",
     subtitle: "Без гонки: вокзал, такси, вода и минимальная закупка.",
     budget: "1 000–2 000 ₽",
-    image: "/places/adler-station.jpg",
+    image: "/places/adler-station.webp",
     imageAlt: "Фасад железнодорожного вокзала Адлер",
     meals: [
       {
@@ -236,7 +236,7 @@ export const DAYS: TripDay[] = [
     title: "«Южные культуры», восстановление и море",
     subtitle: "Парк до жары, затем еда на базе и свободный блок.",
     budget: "1 700–2 600 ₽",
-    image: "/places/southern-cultures.jpg",
+    image: "/places/southern-cultures.webp",
     imageAlt: "Цветущая магнолия в парке Южные культуры",
     meals: [
       homeMeal(
@@ -300,7 +300,7 @@ export const DAYS: TripDay[] = [
     title: "Зал, спокойный Сириус и свидание",
     subtitle: "Единственный ресторанный приём пищи во всей поездке.",
     budget: "7 800–9 000 ₽",
-    image: "/places/date-happiness.png",
+    image: "/places/date-happiness.webp",
     imageAlt: "Ресторан для романтического ужина в Сириусе",
     meals: [
       homeMeal(
@@ -379,7 +379,7 @@ export const DAYS: TripDay[] = [
     title: "Тисо-самшитовая роща: Большое кольцо",
     subtitle: "Кроссовки, вода, перекус и без тренировки после маршрута.",
     budget: "1 900–2 900 ₽",
-    image: "/places/grove.jpg",
+    image: "/places/grove.webp",
     imageAlt: "Лесная тропа в Тисо-самшитовой роще",
     meals: [
       homeMeal(
@@ -455,7 +455,7 @@ export const DAYS: TripDay[] = [
     title: "Skypark официальным трансфером и лёгкий зал",
     subtitle: "Билет онлайн, трансфер от вокзала и запас по воде.",
     budget: "6 740–7 840 ₽",
-    image: "/places/skypark.jpg",
+    image: "/places/skypark.webp",
     imageAlt: "Подвесной мост Skybridge в Skypark Сочи",
     meals: [
       homeMeal(
@@ -610,7 +610,7 @@ export const DAYS: TripDay[] = [
     title: "Финальный зал, море, вкусняшки и сборы",
     subtitle: "Никаких дальних точек: оставить силы на ранний выезд.",
     budget: "2 300–3 300 ₽",
-    image: "/places/cafe-malina.jpg",
+    image: "/places/cafe-malina.webp",
     imageAlt: "Десерт и напиток как отдельная вкусняшка",
     meals: [
       homeMeal(
@@ -680,7 +680,7 @@ export const DAYS: TripDay[] = [
     title: "Такси в 04:35 и поезд в 05:46",
     subtitle: "Всё подготовлено с вечера; утром только взять вещи.",
     budget: "600–900 ₽",
-    image: "/places/adler-station.jpg",
+    image: "/places/adler-station.webp",
     imageAlt: "Железнодорожный вокзал Адлер",
     meals: [
       {
@@ -769,7 +769,7 @@ export const PLACES: Place[] = [
     context: "2 августа · прогулка до жары",
     location: "Нагорный тупик, 13/3Б, Сириус",
     price: "600 ₽ вход на двоих",
-    image: "/places/southern-cultures.jpg",
+    image: "/places/southern-cultures.webp",
     imageAlt: "Магнолия в парке Южные культуры",
     practical: "09:00–18:00, билеты до 17:00. План — 10:00–12:30.",
     foodPolicy: "Основной обед — после возвращения. Пикник внутри заранее не заявляем.",
@@ -786,7 +786,7 @@ export const PLACES: Place[] = [
     context: "4 августа · Большое кольцо",
     location: "Тисо-самшитовая роща, Хоста",
     price: "≈2 100 ₽ на двоих с дорогой",
-    image: "/places/grove.jpg",
+    image: "/places/grove.webp",
     imageAlt: "Зелёная тропа Тисо-самшитовой рощи",
     practical: "Ланч-бокс, холодовой элемент, 1–1,5 л воды на человека.",
     foodPolicy: "Разрешённое место приёма еды уточнить у сотрудника на входе.",
@@ -802,7 +802,7 @@ export const PLACES: Place[] = [
     context: "5 августа · до/после трансфера Skypark",
     location: "Вокзал Адлер, улица Ленина, 113",
     price: "0 ₽",
-    image: "/places/adler-station.jpg",
+    image: "/places/adler-station.webp",
     imageAlt: "Современный вокзал Адлер со стороны улицы",
     practical: "Надёжнее спланировать еду здесь, чем зависеть от правил Skypark.",
     foodPolicy: "Своя еда; выбрать спокойное место, не перекрывая поток пассажиров.",
@@ -816,7 +816,7 @@ export const PLACES: Place[] = [
     context: "5 августа · 10:45–15:30",
     location: "Краснофлотская, 54А, Казачий Брод",
     price: "≈5 440 ₽ билеты + трансфер",
-    image: "/places/skypark.jpg",
+    image: "/places/skypark.webp",
     imageAlt: "Длинный подвесной мост Skybridge",
     practical: "Обратный трансфер забронировать сразу по приезде.",
     foodPolicy: "Правила своей еды внутри нужно уточнить; основной план не зависит от этого.",
@@ -864,7 +864,7 @@ export const PLACES: Place[] = [
     context: "Основной выбор на 3 августа",
     location: "Нижнеимеретинская, 32В",
     price: "5 500–7 000 ₽ на двоих",
-    image: "/places/date-happiness.png",
+    image: "/places/date-happiness.webp",
     imageAlt: "Ресторан Моё ты счастье",
     practical: "Бронь на 17:00–17:30; просить стол у окна или на террасе.",
     foodPolicy: "Единственный ресторанный приём пищи в плане.",
@@ -896,7 +896,7 @@ export const PLACES: Place[] = [
     context: "3, 5 и 7 августа",
     location: "Улица Удачи, 7, Адлер",
     price: "≈2 800 ₽ за три парные тренировки",
-    image: "/places/adler-station.jpg",
+    image: "/places/adler-station.webp",
     imageAlt: "Адлер — район расположения фитнес-клуба Жюль Верн",
     practical: "Тренировки умеренные: full body, восстановительная и финальная. Режим клуба 08:00–22:00.",
     foodPolicy: "Своя еда до или после тренировки по расписанию выбранного дня.",

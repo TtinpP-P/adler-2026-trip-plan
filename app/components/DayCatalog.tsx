@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { DAYS, type TimelineItem } from "../data";
+import { responsiveImageProps } from "../imageMeta";
 import { PlaceLinks } from "./Primitives";
 
 const DAY_CODES: Record<string, string> = {
@@ -222,6 +223,8 @@ export default function DayCatalog() {
                     alt={day.imageAlt}
                     loading={isOpen ? "eager" : "lazy"}
                     decoding="async"
+                    sizes="(max-width: 900px) 100vw, calc(100vw - 340px)"
+                    {...responsiveImageProps(day.image)}
                   />
                   <div>
                     <div className="day-visual__label">

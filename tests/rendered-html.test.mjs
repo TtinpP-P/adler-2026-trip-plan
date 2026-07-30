@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
 async function render(path = "/") {
@@ -97,6 +97,7 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.ok(featuredBlock);
   assert.equal((featuredBlock[1].match(/"[^"]+"/g) ?? []).length, 5);
   assert.doesNotMatch(data, /Олимпийский парк|Поющий фонтан|Сочи Парк/);
+  assert.doesNotMatch(data, /\/places\/[^"]+\.(?:jpg|png)/);
 
   assert.match(dayCatalog, /DAY_CODES/);
   assert.match(dayCatalog, /role="tablist"/);
@@ -168,4 +169,26 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.match(accessibility, /\.money-input:focus-within/);
   assert.match(accessibility, /min-height:\s*44px/);
   assert.match(accessibility, /forced-colors:\s*active/);
+});
+
+test("ships responsive WebP photography within the mobile asset budget", async () => {
+  const [data, imageMeta] = await Promise.all([
+    readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/imageMeta.ts", import.meta.url), "utf8"),
+  ]);
+  const imagePaths = [...new Set(
+    [...data.matchAll(/image:\s*"([^"]+)"/g)].map((match) => match[1]),
+  )];
+
+  for (const imagePath of imagePaths) {
+    assert.match(imagePath, /\.webp$/);
+    const mobilePath = imagePath.replace(/\.webp$/, "-640.webp");
+    const mobileFile = new URL(`../public${mobilePath}`, import.meta.url);
+    const fileStat = await stat(mobileFile);
+    assert.ok(fileStat.size < 100_000, `${mobilePath} exceeds 100 KB`);
+  }
+
+  assert.match(imageMeta, /srcSet:/);
+  assert.match(imageMeta, /width:\s*1280/);
+  assert.match(imageMeta, /height:\s*960/);
 });

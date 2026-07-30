@@ -5,6 +5,7 @@ import { ArrowRight, MapPin } from "../components/UiIcons";
 import AppShell from "../components/AppShell";
 import { NextStepLink, PageIntro, PlaceLinks } from "../components/Primitives";
 import { EVENT_COUNT, FEATURED_EVENT_IDS, PLACES } from "../data";
+import { responsiveImageProps } from "../imageMeta";
 
 export const metadata: Metadata = {
   title: `${EVENT_COUNT} мероприятий — Адлер 2026`,
@@ -37,7 +38,15 @@ export default function EventsPage() {
         {events.map((place, index) => (
           <article id={place.id} key={place.id}>
             <div className="event-catalog__image">
-              <img src={place.image} alt={place.imageAlt} loading="lazy" decoding="async" />
+              <img
+                src={place.image}
+                alt={place.imageAlt}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                decoding="async"
+                sizes="(max-width: 620px) 100vw, (max-width: 1180px) 42vw, 50vw"
+                {...responsiveImageProps(place.image)}
+              />
               <span>{String(index + 1).padStart(2, "0")}</span>
             </div>
             <div className="event-catalog__body">
