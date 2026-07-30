@@ -92,8 +92,13 @@ export default function DayCatalog() {
     window.history.replaceState({}, "", url);
   };
 
+  const activeDay = DAYS.find((day) => day.id === openDay) ?? DAYS[0];
+
   return (
     <div className="day-catalog">
+      <p className="sr-only" aria-live="polite">
+        Открыт план: {activeDay.shortDate}, {activeDay.title}
+      </p>
       <nav className="mobile-day-strip" aria-label="Быстрый выбор дня">
         {DAYS.map((day) => (
           <button

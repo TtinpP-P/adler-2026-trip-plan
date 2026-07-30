@@ -1,0 +1,300 @@
+/*
+ * Iteration 4 — MOTION CONTINUITY
+ * Motion explains page changes, route progress and open/closed state.
+ * Existing day-catalogue geometry is intentionally left untouched.
+ */
+
+:root {
+  /* Primitive duration and easing tokens */
+  --motion-quick: 120ms;
+  --motion-feedback: 180ms;
+  --motion-enter: 280ms;
+  --motion-route: 420ms;
+  --ease-out-ui: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-ui: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Semantic motion tokens */
+  --motion-page-enter: var(--motion-enter) var(--ease-out-ui);
+  --motion-page-exit: var(--motion-feedback) var(--ease-in-ui);
+  --motion-waypoint: var(--motion-enter) var(--ease-out-ui);
+  --motion-line: var(--motion-route) var(--ease-out-ui);
+
+  /* Component motion tokens */
+  --page-enter-distance: 10px;
+  --waypoint-enter-distance: 7px;
+  --action-press-scale: 0.985;
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+.side-rail {
+  view-transition-name: atlas-rail;
+}
+
+.topbar {
+  view-transition-name: atlas-topbar;
+}
+
+.page-shell {
+  view-transition-name: atlas-page;
+  animation: atlas-page-enter var(--motion-page-enter) both;
+}
+
+::view-transition-old(atlas-rail),
+::view-transition-new(atlas-rail),
+::view-transition-old(atlas-topbar),
+::view-transition-new(atlas-topbar) {
+  animation: none;
+}
+
+::view-transition-old(atlas-page) {
+  animation: atlas-page-exit var(--motion-page-exit) both;
+}
+
+::view-transition-new(atlas-page) {
+  animation: atlas-page-enter var(--motion-page-enter) both;
+}
+
+/* The overview route is read from left to right: line, then waypoints. */
+.journey-track::before {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: atlas-route-draw var(--motion-line) 80ms both;
+}
+
+.journey-track > a {
+  opacity: 0;
+  animation: atlas-waypoint-enter var(--motion-waypoint) both;
+}
+
+.journey-track > a:nth-child(1) {
+  animation-delay: 80ms;
+}
+
+.journey-track > a:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.journey-track > a:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.journey-track > a:nth-child(4) {
+  animation-delay: 200ms;
+}
+
+.journey-track > a:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+/* Opening a day settles the image first and then traces its three route stops. */
+.day-row.is-open .day-visual img {
+  animation: atlas-image-settle var(--motion-route) var(--ease-out-ui) both;
+}
+
+.day-row.is-open .day-visual > div {
+  animation: atlas-content-enter var(--motion-enter) 70ms var(--ease-out-ui) both;
+}
+
+.day-row.is-open .day-route__track > li:not(:last-child)::after {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: atlas-route-draw var(--motion-line) both;
+}
+
+.day-row.is-open .day-route__track > li:nth-child(1)::after {
+  animation-delay: 110ms;
+}
+
+.day-row.is-open .day-route__track > li:nth-child(2)::after {
+  animation-delay: 210ms;
+}
+
+.day-row.is-open .day-route__track > li > span {
+  opacity: 0;
+  animation: atlas-route-marker var(--motion-waypoint) both;
+}
+
+.day-row.is-open .day-route__track > li:nth-child(1) > span {
+  animation-delay: 70ms;
+}
+
+.day-row.is-open .day-route__track > li:nth-child(2) > span {
+  animation-delay: 180ms;
+}
+
+.day-row.is-open .day-route__track > li:nth-child(3) > span {
+  animation-delay: 290ms;
+}
+
+/* Details and completion controls give immediate, local state feedback. */
+.flat-details[open] > :not(summary),
+.budget-ledger[open] > :not(summary) {
+  animation: atlas-details-enter var(--motion-feedback) var(--ease-out-ui) both;
+}
+
+.check-dot.is-checked svg,
+.ticket-row__actions button.is-checked svg {
+  animation: atlas-check-enter var(--motion-feedback) var(--ease-out-ui) both;
+}
+
+.side-nav a.is-active::after {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: -3px;
+  width: 2px;
+  content: "";
+  background: var(--cyan);
+  transform-origin: center top;
+  animation: atlas-active-route var(--motion-feedback) var(--ease-out-ui) both;
+}
+
+button:active,
+a:active,
+summary:active {
+  transform: scale(var(--action-press-scale));
+  transition-duration: var(--motion-quick);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .next-chapter__copy > span svg,
+  .journey-budget__head > svg,
+  .event-buy svg,
+  .primary-path svg {
+    transition: transform var(--motion-feedback) var(--ease-out-ui);
+  }
+
+  .next-chapter:hover .next-chapter__copy > span svg,
+  .next-chapter:focus-visible .next-chapter__copy > span svg,
+  .journey-budget:hover .journey-budget__head > svg,
+  .journey-budget:focus-visible .journey-budget__head > svg,
+  .event-buy:hover svg,
+  .event-buy:focus-visible svg,
+  .primary-path:hover svg,
+  .primary-path:focus-visible svg {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes atlas-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--page-enter-distance));
+  }
+}
+
+@keyframes atlas-page-exit {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--page-enter-distance) * -0.5));
+  }
+}
+
+@keyframes atlas-route-draw {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes atlas-waypoint-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--waypoint-enter-distance) * -1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes atlas-image-settle {
+  from {
+    opacity: 0.72;
+    transform: scale(1.018);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes atlas-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--waypoint-enter-distance));
+  }
+}
+
+@keyframes atlas-route-marker {
+  from {
+    opacity: 0;
+    transform: rotate(45deg) scale(0.68);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(45deg) scale(1);
+  }
+}
+
+@keyframes atlas-details-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes atlas-check-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes atlas-active-route {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-shell,
+  .journey-track::before,
+  .journey-track > a,
+  .day-row.is-open .day-visual img,
+  .day-row.is-open .day-visual > div,
+  .day-row.is-open .day-route__track > li:not(:last-child)::after,
+  .day-row.is-open .day-route__track > li > span,
+  .flat-details[open] > :not(summary),
+  .budget-ledger[open] > :not(summary),
+  .check-dot.is-checked svg,
+  .ticket-row__actions button.is-checked svg,
+  .side-nav a.is-active::after {
+    opacity: 1;
+    animation: none !important;
+    transform: none;
+  }
+
+  .day-row.is-open .day-route__track > li > span {
+    transform: rotate(45deg);
+  }
+
+  ::view-transition-old(atlas-page),
+  ::view-transition-new(atlas-page) {
+    animation: none;
+  }
+}

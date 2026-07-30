@@ -219,7 +219,7 @@ export default function AppShell({
             </button>
           </div>
         </header>
-        <main className="page-shell" id="main-content" tabIndex={-1}>
+        <main className="page-shell" id="main-content" tabIndex={-1} key={active}>
           {children}
         </main>
       </div>

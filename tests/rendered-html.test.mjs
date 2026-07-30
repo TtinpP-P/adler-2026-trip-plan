@@ -60,13 +60,14 @@ test("server-renders all requested task pages", async () => {
 });
 
 test("keeps horizontal day catalogue, official checkout handoff and five events", async () => {
-  const [data, dayCatalog, journey, tickets, css, artDirection] = await Promise.all([
+  const [data, dayCatalog, journey, tickets, css, artDirection, motion] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/JourneyOverview.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/TicketCenter.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/art-direction.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/motion.css", import.meta.url), "utf8"),
   ]);
 
   const featuredBlock = data.match(
@@ -112,4 +113,12 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
   assert.match(artDirection, /\.event-catalog > article:first-child/);
   assert.match(artDirection, /\.day-route__track > li:not\(:last-child\)::after/);
   assert.match(artDirection, /@media \(max-width: 620px\)/);
+
+  assert.match(dayCatalog, /aria-live="polite"/);
+  assert.match(motion, /MOTION CONTINUITY/);
+  assert.match(motion, /--motion-page-enter/);
+  assert.match(motion, /@view-transition/);
+  assert.match(motion, /\.journey-track::before[\s\S]*atlas-route-draw/);
+  assert.match(motion, /\.day-row\.is-open \.day-route__track/);
+  assert.match(motion, /prefers-reduced-motion:\s*reduce/);
 });
