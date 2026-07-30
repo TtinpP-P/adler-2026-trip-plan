@@ -77,9 +77,17 @@ test("keeps horizontal day catalogue, official checkout handoff and five events"
 
   assert.match(dayCatalog, /DAY_CODES/);
   assert.match(dayCatalog, /aria-expanded/);
+  assert.match(dayCatalog, /day-route__track/);
+  assert.match(dayCatalog, /day-content__grid/);
+  assert.match(dayCatalog, /3 приёма пищи/);
+  assert.match(dayCatalog, /Логистика питания/);
+  assert.match(dayCatalog, /Открывать только при необходимости/);
   assert.match(css, /\.day-catalog\s*\{[\s\S]*display:\s*flex/);
   assert.match(css, /\.day-row\.is-open[\s\S]*flex:\s*1 1/);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-rows:\s*0fr/);
+  assert.match(css, /\.day-route__facts/);
+  assert.match(css, /\.day-notes__grid/);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.day-content__grid\s*\{[\s\S]*grid-template-columns:\s*1fr/);
 
   assert.match(journey, /phaseForDate/);
   assert.match(journey, /adler-ticket-status/);

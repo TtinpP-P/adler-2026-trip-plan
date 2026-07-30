@@ -14,12 +14,8 @@ import {
   Tree,
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { DAYS, type Meal, type TimelineItem } from "../data";
+import { DAYS, type TimelineItem } from "../data";
 import { PlaceLinks } from "./Primitives";
-
-type Entry =
-  | { type: "meal"; time: number; value: Meal }
-  | { type: "timeline"; time: number; value: TimelineItem };
 
 const DAY_CODES: Record<string, string> = {
   Понедельник: "ПН",
@@ -47,6 +43,14 @@ const KIND_ICONS: Record<
 const toMinutes = (value: string) => {
   const match = value.match(/(\d{1,2}):(\d{2})/);
   return match ? Number(match[1]) * 60 + Number(match[2]) : 9999;
+};
+
+const routeStops = (items: TimelineItem[]) => {
+  if (items.length <= 3) {
+    return items;
+  }
+
+  return [items[0], items[Math.floor((items.length - 1) / 2)], items.at(-1)!];
 };
 
 function initialDay() {
@@ -106,19 +110,18 @@ export default function DayCatalog() {
       </nav>
       {DAYS.map((day, index) => {
         const isOpen = openDay === day.id;
-        const entries: Entry[] = [
-          ...day.meals.map((value) => ({
-            type: "meal" as const,
-            time: toMinutes(value.time),
-            value,
-          })),
-          ...day.timeline.map((value) => ({
-            type: "timeline" as const,
-            time: toMinutes(value.time),
-            value,
-          })),
-        ].sort((a, b) => a.time - b.time);
-        const completed = entries.filter((entry) => checks[entry.value.id]).length;
+        const timeline = [...day.timeline].sort(
+          (a, b) => toMinutes(a.time) - toMinutes(b.time),
+        );
+        const meals = [...day.meals].sort(
+          (a, b) => toMinutes(a.time) - toMinutes(b.time),
+        );
+        const allItems = [...timeline, ...meals];
+        const firstItem = [...allItems].sort(
+          (a, b) => toMinutes(a.time) - toMinutes(b.time),
+        )[0];
+        const stops = routeStops(timeline);
+        const completed = allItems.filter((item) => checks[item.id]).length;
 
         return (
           <section className={`day-row${isOpen ? " is-open" : ""}`} key={day.id}>
@@ -135,7 +138,7 @@ export default function DayCatalog() {
               <span className="day-row__summary">
                 <b>{day.title}</b>
                 <small>
-                  {entries.length} пунктов · {day.budget}
+                  {allItems.length} пунктов · {day.budget}
                   {completed ? ` · ${completed} готово` : ""}
                 </small>
               </span>
@@ -147,69 +150,201 @@ export default function DayCatalog() {
                 <div className="day-visual">
                   <img src={day.image} alt={day.imageAlt} />
                   <div>
-                    <p className="eyebrow">{day.eyebrow}</p>
+                    <div className="day-visual__label">
+                      <span>01</span>
+                      <p className="eyebrow">{day.eyebrow}</p>
+                    </div>
                     <h2>{day.title}</h2>
                     <p>{day.subtitle}</p>
                   </div>
                 </div>
 
-                <ol className="schedule-list">
-                  {entries.map((entry) => {
-                    const item = entry.value;
-                    const isMeal = entry.type === "meal";
-                    const Icon =
-                      entry.type === "meal"
-                        ? ForkKnife
-                        : KIND_ICONS[entry.value.kind];
-                    const description =
-                      entry.type === "meal"
-                        ? entry.value.location
-                        : entry.value.detail;
-                    const phone =
-                      entry.type === "timeline" ? entry.value.phone : undefined;
-                    return (
-                      <li className={checks[item.id] ? "is-done" : ""} key={item.id}>
-                        <time>{item.time}</time>
-                        <span className={`schedule-list__icon${isMeal ? " is-meal" : ""}`}>
-                          <Icon size={16} weight="bold" />
-                        </span>
-                        <div className="schedule-list__body">
-                          <div className="schedule-list__title">
-                            <b>
-                              {entry.type === "meal"
-                                ? `${entry.value.label}: ${entry.value.title}`
-                                : entry.value.title}
-                            </b>
-                            {entry.type === "meal" ? (
-                              <span className={entry.value.type === "date" ? "tag is-date" : "tag"}>
-                                {entry.value.type === "date" ? "свидание" : "своя еда"}
-                              </span>
-                            ) : null}
-                          </div>
-                          <p>{description}</p>
-                          <PlaceLinks mapUrl={item.mapUrl} routeUrl={item.routeUrl} phone={phone} />
-                        </div>
-                        <button
-                          className={`check-dot${checks[item.id] ? " is-checked" : ""}`}
-                          type="button"
-                          aria-pressed={Boolean(checks[item.id])}
-                          aria-label={`${checks[item.id] ? "Снять отметку" : "Отметить"}: ${item.title}`}
-                          onClick={() => toggleCheck(item.id)}
-                        >
-                          {checks[item.id] ? <Check size={14} weight="bold" /> : null}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ol>
+                <section className="day-layer day-route" aria-labelledby={`route-${day.id}`}>
+                  <header className="day-layer__heading">
+                    <span>02</span>
+                    <div>
+                      <p>Маршрут и время</p>
+                      <h3 id={`route-${day.id}`}>Как пройдёт день</h3>
+                    </div>
+                  </header>
 
-                <details className="flat-details">
-                  <summary>
-                    План Б
-                    <CaretDown size={16} weight="bold" />
-                  </summary>
-                  <p>{day.fallback}</p>
-                </details>
+                  <dl className="day-route__facts">
+                    <div>
+                      <dt>Старт</dt>
+                      <dd>{firstItem?.time ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>Этапов</dt>
+                      <dd>{timeline.length}</dd>
+                    </div>
+                    <div>
+                      <dt>Бюджет дня</dt>
+                      <dd>{day.budget}</dd>
+                    </div>
+                  </dl>
+
+                  <ol className="day-route__track" aria-label="Ключевые точки маршрута">
+                    {stops.map((item) => (
+                      <li key={item.id}>
+                        <span aria-hidden="true" />
+                        <time>{item.time}</time>
+                        <b>{item.title}</b>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+
+                <section className="day-layer day-content" aria-labelledby={`actions-${day.id}`}>
+                  <header className="day-layer__heading">
+                    <span>03</span>
+                    <div>
+                      <p>Действия и питание</p>
+                      <h3 id={`actions-${day.id}`}>Что делать по ходу дня</h3>
+                    </div>
+                  </header>
+
+                  <div className="day-content__grid">
+                    <section aria-labelledby={`timeline-${day.id}`}>
+                      <div className="day-content__subheading">
+                        <Compass size={18} weight="bold" />
+                        <div>
+                          <p>Основной план</p>
+                          <h4 id={`timeline-${day.id}`}>{timeline.length} этапов</h4>
+                        </div>
+                      </div>
+                      <ol className="schedule-list schedule-list--actions">
+                        {timeline.map((item) => {
+                          const Icon = KIND_ICONS[item.kind];
+                          return (
+                            <li className={checks[item.id] ? "is-done" : ""} key={item.id}>
+                              <time>{item.time}</time>
+                              <span className="schedule-list__icon">
+                                <Icon size={16} weight="bold" />
+                              </span>
+                              <div className="schedule-list__body">
+                                <div className="schedule-list__title">
+                                  <b>{item.title}</b>
+                                </div>
+                                <p>{item.detail}</p>
+                                <PlaceLinks
+                                  mapUrl={item.mapUrl}
+                                  routeUrl={item.routeUrl}
+                                  phone={item.phone}
+                                />
+                              </div>
+                              <button
+                                className={`check-dot${checks[item.id] ? " is-checked" : ""}`}
+                                type="button"
+                                aria-pressed={Boolean(checks[item.id])}
+                                aria-label={`${checks[item.id] ? "Снять отметку" : "Отметить"}: ${item.title}`}
+                                onClick={() => toggleCheck(item.id)}
+                              >
+                                {checks[item.id] ? <Check size={14} weight="bold" /> : null}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </section>
+
+                    <section className="day-meals" aria-labelledby={`meals-${day.id}`}>
+                      <div className="day-content__subheading">
+                        <ForkKnife size={18} weight="bold" />
+                        <div>
+                          <p>Питание</p>
+                          <h4 id={`meals-${day.id}`}>3 приёма пищи</h4>
+                        </div>
+                      </div>
+                      <ol className="day-meal-list">
+                        {meals.map((meal) => (
+                          <li className={checks[meal.id] ? "is-done" : ""} key={meal.id}>
+                            <div className="day-meal-list__time">
+                              <time>{meal.time}</time>
+                              <span>{meal.label}</span>
+                            </div>
+                            <div className="day-meal-list__body">
+                              <div>
+                                <b>{meal.title}</b>
+                                <span className={meal.type === "date" ? "tag is-date" : "tag"}>
+                                  {meal.type === "date" ? "свидание" : "своя еда"}
+                                </span>
+                              </div>
+                              <p>{meal.location}</p>
+                              <PlaceLinks mapUrl={meal.mapUrl} routeUrl={meal.routeUrl} />
+                            </div>
+                            <button
+                              className={`check-dot${checks[meal.id] ? " is-checked" : ""}`}
+                              type="button"
+                              aria-pressed={Boolean(checks[meal.id])}
+                              aria-label={`${checks[meal.id] ? "Снять отметку" : "Отметить"}: ${meal.title}`}
+                              onClick={() => toggleCheck(meal.id)}
+                            >
+                              {checks[meal.id] ? <Check size={14} weight="bold" /> : null}
+                            </button>
+                          </li>
+                        ))}
+                      </ol>
+                    </section>
+                  </div>
+                </section>
+
+                <section className="day-layer day-notes" aria-labelledby={`notes-${day.id}`}>
+                  <header className="day-layer__heading">
+                    <span>04</span>
+                    <div>
+                      <p>Подробные примечания</p>
+                      <h3 id={`notes-${day.id}`}>Открывать только при необходимости</h3>
+                    </div>
+                  </header>
+
+                  <div className="day-notes__grid">
+                    <details className="flat-details">
+                      <summary>
+                        <span>
+                          <b>План Б</b>
+                          <small>Запасной сценарий дня</small>
+                        </span>
+                        <CaretDown size={16} weight="bold" />
+                      </summary>
+                      <p>{day.fallback}</p>
+                    </details>
+
+                    <details className="flat-details">
+                      <summary>
+                        <span>
+                          <b>Логистика питания</b>
+                          <small>Упаковка, хранение и вода</small>
+                        </span>
+                        <CaretDown size={16} weight="bold" />
+                      </summary>
+                      <div className="day-food-notes">
+                        {meals.map((meal) => (
+                          <article key={meal.id}>
+                            <header>
+                              <time>{meal.time}</time>
+                              <b>{meal.label}</b>
+                            </header>
+                            <dl>
+                              <div>
+                                <dt>Взять</dt>
+                                <dd>{meal.pack}</dd>
+                              </div>
+                              <div>
+                                <dt>Хранить</dt>
+                                <dd>{meal.storage}</dd>
+                              </div>
+                              <div>
+                                <dt>Вода</dt>
+                                <dd>{meal.water}</dd>
+                              </div>
+                            </dl>
+                            {meal.note ? <p>{meal.note}</p> : null}
+                          </article>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                </section>
               </div>
             </div>
           </section>
