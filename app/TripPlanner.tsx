@@ -30,6 +30,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   BUDGET,
   DAYS,
+  EVENT_COUNT,
   FEATURED_EVENT_IDS,
   PLAN_TOTAL,
   PLACES,
@@ -59,7 +60,7 @@ type DayEntry =
 
 const NAV_ITEMS = [
   { id: "plan", label: "План поездки", icon: CalendarDots },
-  { id: "events", label: "6 мероприятий", icon: Compass },
+  { id: "events", label: `${EVENT_COUNT} мероприятий`, icon: Compass },
   { id: "food", label: "Питание", icon: ForkKnife },
   { id: "guide", label: "Магазины и точки", icon: Storefront },
   { id: "budget", label: "Смета", icon: Wallet },
@@ -451,7 +452,7 @@ export default function TripPlanner() {
       @media(max-width:620px){article{display:block;width:100%}table{font-size:12px}body{padding:14px 10px 48px}}
       </style></head><body><p class="eyebrow">1–8 августа 2026 · сценарий B</p>
       <h1>Адлер 2026</h1><p><b>Рабочий потолок:</b> ${esc(formatRub(WORKING_CEILING))}</p>
-      ${daysMarkup}<section><h2>6 мероприятий</h2>${eventsMarkup}</section>
+      ${daysMarkup}<section><h2>${EVENT_COUNT} мероприятий</h2>${eventsMarkup}</section>
       <section><h2>Магазины и полезные точки</h2>${guideMarkup}</section>
       <section><h2>Смета</h2><table><thead><tr><th>Статья</th><th>Расчёт</th><th>План</th><th>Факт</th></tr></thead>
       <tbody>${budgetMarkup}</tbody></table></section></body></html>`;
@@ -722,7 +723,7 @@ export default function TripPlanner() {
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Основной маршрут</p>
-                <h2>Все 6 мероприятий</h2>
+                <h2>Все {EVENT_COUNT} мероприятий</h2>
                 <p>Без фильтров: каждое место уже входит в утверждённый план.</p>
               </div>
             </div>

@@ -16,15 +16,23 @@ import {
   Wallet,
   X,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BUDGET, DAYS, FEATURED_EVENT_IDS, PLACES, WORKING_CEILING } from "../data";
+import {
+  BUDGET,
+  DAYS,
+  EVENT_COUNT,
+  FEATURED_EVENT_IDS,
+  PLACES,
+  WORKING_CEILING,
+} from "../data";
 
 type Theme = "dark" | "light";
 
 const NAV = [
   { href: "/", label: "Обзор", icon: House },
   { href: "/plan", label: "Маршрут", icon: CalendarBlank },
-  { href: "/events", label: "6 мест", icon: Compass },
+  { href: "/events", label: `${EVENT_COUNT} мест`, icon: Compass },
   { href: "/tickets", label: "Билеты", icon: Ticket, accent: true },
   { href: "/food", label: "Еда", icon: ForkKnife },
   { href: "/guide", label: "Адреса", icon: Storefront },
@@ -69,7 +77,7 @@ function downloadOfflinePlan() {
   font:15px/1.55 system-ui,sans-serif}h1,h2{line-height:1.15}section{padding:18px 0;border-top:1px solid #2a3940}
   a{color:#68dbe4}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #2a3940;text-align:left}
   </style><body><h1>Адлер 2026</h1><p>1–8 августа · потолок ${formatRub(WORKING_CEILING)}</p>
-  ${days}<section><h2>6 мероприятий</h2><ol>${events
+  ${days}<section><h2>${EVENT_COUNT} мероприятий</h2><ol>${events
     .map((place) => `<li><b>${esc(place.title)}</b> — ${esc(place.price)}</li>`)
     .join("")}</ol></section>
   <section><h2>Смета</h2><table>${BUDGET.map(
@@ -132,11 +140,15 @@ export default function AppShell({
   };
 
   return (
-    <div
-      className={`app-frame${collapsed ? " is-collapsed" : ""}${
-        drawerOpen ? " is-drawer-open" : ""
-      }`}
-    >
+    <>
+      <a className="skip-link" href="#main-content">
+        Перейти к содержанию
+      </a>
+      <div
+        className={`app-frame${collapsed ? " is-collapsed" : ""}${
+          drawerOpen ? " is-drawer-open" : ""
+        }`}
+      >
       <aside className="side-rail" aria-label="Основная навигация">
         <button className="brand" type="button" onClick={toggleSidebar}>
           <span className="brand__mark">
@@ -150,7 +162,7 @@ export default function AppShell({
 
         <nav className="side-nav">
           {NAV.map(({ href, label, icon: Icon, ...item }) => (
-            <a
+            <Link
               key={href}
               className={`${active === href ? "is-active" : ""}${
                 "accent" in item && item.accent ? " is-accent" : ""
@@ -161,7 +173,7 @@ export default function AppShell({
             >
               <Icon size={19} weight={active === href ? "fill" : "bold"} />
               <span className="side-label">{label}</span>
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -207,8 +219,11 @@ export default function AppShell({
             </button>
           </div>
         </header>
-        <main className="page-shell">{children}</main>
+        <main className="page-shell" id="main-content" tabIndex={-1}>
+          {children}
+        </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

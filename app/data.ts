@@ -92,6 +92,19 @@ export type BudgetRow = {
   group: "food" | "route" | "activity" | "reserve";
 };
 
+export type TicketItem = {
+  id: string;
+  date: string;
+  title: string;
+  detail: string;
+  unitPrice: number;
+  initialQty: number;
+  mode: "online" | "onsite" | "booking" | "free";
+  href: string;
+  action: string;
+  priceNote?: string;
+};
+
 export const HOME = "Гостевой дом Дядя Стёпа, Фермерская улица, 26, Адлер";
 export const STATION = "Железнодорожный вокзал Адлер, улица Ленина, 113";
 
@@ -284,11 +297,11 @@ export const DAYS: TripDay[] = [
     shortDate: "3 авг",
     weekday: "Понедельник",
     eyebrow: "День 3 · свидание",
-    title: "Зал, Сириус, ранний ресторан и фонтан",
+    title: "Зал, спокойный Сириус и свидание",
     subtitle: "Единственный ресторанный приём пищи во всей поездке.",
-    budget: "9 800–13 800 ₽",
-    image: "/places/olympic-park.jpg",
-    imageAlt: "Поющий фонтан в Олимпийском парке Сочи",
+    budget: "7 800–9 000 ₽",
+    image: "/places/date-happiness.png",
+    imageAlt: "Ресторан для романтического ужина в Сириусе",
     meals: [
       homeMeal(
         "d3-breakfast",
@@ -317,7 +330,7 @@ export const DAYS: TripDay[] = [
         note: "Бронь на 17:00–17:30. Лимит ужина на двоих — до 7 000 ₽.",
         mapUrl: mapUrl("Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус"),
         routeUrl: routeUrl(
-          "Олимпийский парк, Сириус",
+          "Имеретинская набережная, Сириус",
           "Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус",
           "pd",
         ),
@@ -339,34 +352,24 @@ export const DAYS: TripDay[] = [
       {
         id: "d3-sirius",
         time: "13:30–16:30",
-        title: "Олимпийский парк",
-        detail: "Прогулка в спокойном темпе; ограничения самокатов учитывать по факту.",
+        title: "Спокойный Сириус и море",
+        detail: "Прогулка по Имеретинской набережной без обязательных точек; оставить время на дорогу к ресторану.",
         kind: "rest",
-        mapUrl: mapUrl("Олимпийский парк, Сириус"),
-        routeUrl: routeUrl(HOME, "Олимпийский парк, Сириус"),
+        mapUrl: mapUrl("Имеретинская набережная, Сириус"),
+        routeUrl: routeUrl(HOME, "Имеретинская набережная, Сириус"),
         checkable: true,
       },
       {
         id: "d3-date",
         time: "17:00–19:10",
         title: "Романтический ужин",
-        detail: "Стол у окна/на террасе. Уйти вовремя, если выбираете фонтан.",
+        detail: "Стол у окна или на террасе. После ужина — спокойный вечер без отдельной программы.",
         kind: "date",
         phone: "+79956123030",
         checkable: true,
       },
-      {
-        id: "d3-fountain",
-        time: "19:30–21:00",
-        title: "Поющий фонтан · время проверить",
-        detail: "Утром открыть официальную афишу; августовский слот ещё может меняться.",
-        kind: "task",
-        mapUrl: mapUrl("Поющий фонтан, Медальная площадь, Сириус"),
-        warning: "Расписание августа нужно проверить 3 августа.",
-        checkable: true,
-      },
     ],
-    fallback: "Если фонтана нет — набережная и выбранная вкусняшка из отдельного конверта.",
+    fallback: "Если после тренировки мало сил — пропустить прогулку по Сириусу и ехать на свидание напрямую.",
   },
   {
     id: "2026-08-04",
@@ -608,7 +611,7 @@ export const DAYS: TripDay[] = [
     subtitle: "Никаких дальних точек: оставить силы на ранний выезд.",
     budget: "2 300–3 300 ₽",
     image: "/places/cafe-malina.jpg",
-    imageAlt: "Десерт и напиток в кафе Малина",
+    imageAlt: "Десерт и напиток как отдельная вкусняшка",
     meals: [
       homeMeal(
         "d7-breakfast",
@@ -777,36 +780,6 @@ export const PLACES: Place[] = [
     sourceLabel: "Официальная страница",
   },
   {
-    id: "olympic-embankment",
-    category: "own",
-    title: "Имеретинская набережная",
-    context: "2 или 3 августа · запасной ланч-спот",
-    location: "Сириус, после выхода из парка/по пути к Медальной площади",
-    price: "0 ₽",
-    image: "/places/olympic-park.jpg",
-    imageAlt: "Фонтан и объекты Олимпийского парка",
-    practical: "Выбрать тень и скамейку; воду и пакет для мусора принести с собой.",
-    foodPolicy: "Своя еда. Не рассчитывать на холодильник или гарантированный питьевой фонтан.",
-    mapUrl: mapUrl("Имеретинская набережная, Сириус"),
-    routeUrl: routeUrl("Парк Южные культуры, Сириус", "Имеретинская набережная, Сириус", "pd"),
-  },
-  {
-    id: "olympic-park",
-    category: "activity",
-    title: "Олимпийский парк и Поющий фонтан",
-    context: "3 августа · 13:30–21:00",
-    location: "Медальная площадь, Сириус",
-    price: "≈2 600 ₽ транспорт и аренда",
-    image: "/places/olympic-park.jpg",
-    imageAlt: "Поющий фонтан и олимпийские объекты в Сириусе",
-    practical: "Прогулка, раннее свидание и фонтан. Время шоу проверить утром 3 августа.",
-    foodPolicy: "Обед — своя еда до выезда; ужин — единственное ресторанное свидание.",
-    mapUrl: mapUrl("Олимпийский парк, Сириус"),
-    routeUrl: routeUrl(HOME, "Олимпийский парк, Сириус"),
-    sourceUrl: "https://sirius.gov.ru/afisha/",
-    sourceLabel: "Официальная афиша Сириуса",
-  },
-  {
     id: "grove-rest",
     category: "activity",
     title: "Тисо-самшитовая роща",
@@ -885,23 +858,6 @@ export const PLACES: Place[] = [
     sourceLabel: "Официальная карточка",
   },
   {
-    id: "malina",
-    category: "treat",
-    title: "Кафе «Малина»",
-    context: "3 или 7 августа · десертный вариант",
-    location: "Сочи Парк Отель",
-    price: "Выбирать в остаток конверта",
-    image: "/places/cafe-malina.jpg",
-    imageAlt: "Десертная витрина кафе Малина",
-    practical: "10:00–22:00; десерты, моти, кофе, лимонады и мороженое.",
-    foodPolicy: "Только маленькая радость после своей еды; отдельный маршрут ради неё не строим.",
-    mapUrl: mapUrl("Кафе Малина, Сочи Парк Отель, Сириус"),
-    routeUrl: routeUrl("Олимпийский парк, Сириус", "Кафе Малина, Сочи Парк Отель, Сириус", "pd"),
-    sourceUrl:
-      "https://sochiparkhotel.ru/infrastructure/restaurants-and-bars/cafe-malina/",
-    sourceLabel: "Официальная карточка",
-  },
-  {
     id: "happiness",
     category: "date",
     title: "«Моё ты счастье»",
@@ -913,7 +869,7 @@ export const PLACES: Place[] = [
     practical: "Бронь на 17:00–17:30; просить стол у окна или на террасе.",
     foodPolicy: "Единственный ресторанный приём пищи в плане.",
     mapUrl: mapUrl("Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус"),
-    routeUrl: routeUrl("Олимпийский парк, Сириус", "Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус", "pd"),
+    routeUrl: routeUrl("Имеретинская набережная, Сириус", "Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус", "pd"),
     sourceUrl: "https://moetischastie.rest/",
     sourceLabel: "Сайт ресторана",
   },
@@ -929,7 +885,7 @@ export const PLACES: Place[] = [
     practical: "Логистически удобно, но это премиальный резерв, а не равнозначная замена.",
     foodPolicy: "Выбирать только при заранее подтверждённой возможности удержать лимит.",
     mapUrl: mapUrl("Моя Звезда by Novikov, Олимпийский проспект, 36/6, Сириус"),
-    routeUrl: routeUrl("Олимпийский парк, Сириус", "Моя Звезда by Novikov, Олимпийский проспект, 36/6, Сириус", "pd"),
+    routeUrl: routeUrl("Имеретинская набережная, Сириус", "Моя Звезда by Novikov, Олимпийский проспект, 36/6, Сириус", "pd"),
     sourceUrl: "https://www.novikovgroup.ru/restaurants/detail/moya-zvezda/",
     sourceLabel: "Сайт ресторана",
   },
@@ -953,12 +909,77 @@ export const PLACES: Place[] = [
 
 export const FEATURED_EVENT_IDS = [
   "southern-cultures",
-  "olympic-park",
   "grove-rest",
   "skypark",
   "rosa-valley",
   "jules-verne",
 ] as const;
+
+export const TICKETS: TicketItem[] = [
+  {
+    id: "southern",
+    date: "2 августа",
+    title: "Парк «Южные культуры»",
+    detail: "Взрослый вход. Билет приобретается в кассе парка до 17:00.",
+    unitPrice: 300,
+    initialQty: 2,
+    mode: "onsite",
+    href: "https://www.kavkazzapoved.ru/tours/park-yuzhnye-kultury/park-yuzhnye-kultury",
+    action: "Правила и касса",
+  },
+  {
+    id: "grove",
+    date: "4 августа",
+    title: "Тисо-самшитовая роща",
+    detail: "Единый вход на маршруты. Для Большого кольца билет рекомендуют брать в день похода.",
+    unitPrice: 300,
+    initialQty: 2,
+    mode: "onsite",
+    href: "https://www.kavkazzapoved.ru/en/node/24054",
+    action: "Маршрут и касса",
+  },
+  {
+    id: "skypark",
+    date: "5 августа",
+    title: "Skypark · прогулка",
+    detail: "Вход в парк, Skybridge и смотровые площадки. Онлайн-скидка уже учтена.",
+    unitPrice: 2520,
+    initialQty: 2,
+    mode: "online",
+    href: "https://skypark.ru/",
+    action: "Купить на Skypark",
+  },
+  {
+    id: "rosa",
+    date: "6 августа",
+    title: "Роза Хутор · прогулочный",
+    detail: "Плановый комбо-билет на канатные дороги. Точный тариф зависит от выбранной даты.",
+    unitPrice: 3350,
+    initialQty: 2,
+    mode: "online",
+    href: "https://rosakhutor.ru/tickets/",
+    action: "Выбрать дату на Розе",
+    priceNote: "плановая цена",
+  },
+  {
+    id: "gym",
+    date: "3, 5 и 7 августа",
+    title: "«Жюль Верн» · разовый вход",
+    detail: "Три парные тренировки. Перед первым визитом подтвердить разовый тариф.",
+    unitPrice: 400,
+    initialQty: 6,
+    mode: "booking",
+    href: "https://jv-fit.ru/",
+    action: "Уточнить у клуба",
+    priceNote: "ориентир",
+  },
+];
+
+export const EVENT_COUNT = FEATURED_EVENT_IDS.length;
+export const TICKET_ITEM_COUNT = TICKETS.length;
+export const ONLINE_TICKET_COUNT = TICKETS.filter(
+  (ticket) => ticket.mode === "online",
+).length;
 
 export const PRACTICAL_PLACES: PracticalPlace[] = [
   {
@@ -1027,7 +1048,7 @@ export const PRACTICAL_PLACES: PracticalPlace[] = [
     location: "Приреченская улица, 11/3, Сириус",
     practical: "Специализированный магазин рядом с маршрутом по Сириусу. Часы лучше подтвердить звонком.",
     mapUrl: mapUrl("Море сувениров, Приреченская улица, 11/3, Сириус"),
-    routeUrl: routeUrl("Олимпийский парк, Сириус", "Море сувениров, Приреченская улица, 11/3, Сириус", "pd"),
+    routeUrl: routeUrl("Имеретинская набережная, Сириус", "Море сувениров, Приреченская улица, 11/3, Сириус", "pd"),
     sourceUrl: "https://2gis.ru/sochi/branches/4222661521595166",
     sourceLabel: "Карточка филиалов",
     phone: "+79890810808",
@@ -1048,21 +1069,10 @@ export const PRACTICAL_PLACES: PracticalPlace[] = [
     location: "Нижнеимеретинская улица, 32В, Сириус",
     practical: "Единственный ресторанный приём пищи: бронь на 17:00–17:30, лимит до 7 000 ₽ на двоих.",
     mapUrl: mapUrl("Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус"),
-    routeUrl: routeUrl("Олимпийский парк, Сириус", "Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус", "pd"),
+    routeUrl: routeUrl("Имеретинская набережная, Сириус", "Моё ты счастье, Нижнеимеретинская улица, 32В, Сириус", "pd"),
     sourceUrl: "https://moetischastie.rest/",
     sourceLabel: "Сайт ресторана",
     phone: "+79956123030",
-  },
-  {
-    id: "fountain",
-    category: "date",
-    title: "Поющий фонтан",
-    location: "Медальная площадь, Сириус",
-    practical: "Финал свидания 3 августа. Точное время шоу проверить утром в официальной афише.",
-    mapUrl: mapUrl("Поющий фонтан, Медальная площадь, Сириус"),
-    routeUrl: routeUrl("Моё ты счастье, Сириус", "Поющий фонтан, Медальная площадь, Сириус", "pd"),
-    sourceUrl: "https://sirius.gov.ru/afisha/",
-    sourceLabel: "Афиша территории Сириус",
   },
   {
     id: "surf-treat",
@@ -1127,14 +1137,6 @@ export const BUDGET: BudgetRow[] = [
     group: "activity",
   },
   {
-    id: "olympic",
-    category: "Олимпийский парк",
-    calculation: "Транспорт и аренда по месту",
-    amount: 2600,
-    note: "Самокаты не считаются гарантированным транспортом по всей территории.",
-    group: "activity",
-  },
-  {
     id: "grove",
     category: "Тисо-самшитовая роща",
     calculation: "Вход 600 + дорога 1 500",
@@ -1179,7 +1181,7 @@ export const BUDGET: BudgetRow[] = [
     category: "Рабочий резерв",
     calculation: "Защита нового потолка",
     amount: 1100,
-    note: "Сокращён с 3 500 ₽, чтобы рабочий потолок стал 55 300 ₽.",
+    note: "Минимальный неприкосновенный запас после сокращения маршрута.",
     group: "reserve",
   },
 ];

@@ -29,8 +29,12 @@ test("server-renders the multipage Adler overview", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /Вся поездка — без длинного единого экрана/);
-  assert.match(html, /55[^\d]*300/);
+  assert.match(html, /До поездки — 2 дня/);
+  assert.match(html, /Следующее действие/);
+  assert.match(html, /Подготовка/);
+  assert.match(html, /Прибытие/);
+  assert.match(html, /Финальная точка/);
+  assert.match(html, /52[^\d]*700/);
   assert.match(html, /href="\/plan"/);
   assert.match(html, /href="\/tickets"/);
   assert.match(html, /Скачать HTML/);
@@ -41,7 +45,7 @@ test("server-renders the multipage Adler overview", async () => {
 test("server-renders all requested task pages", async () => {
   const expectations = new Map([
     ["/plan", /Каталог маршрута/],
-    ["/events", /Шесть мероприятий/],
+    ["/events", /5 мероприятий/],
     ["/tickets", /Билеты и бронь/],
     ["/food", /Питание по дням/],
     ["/guide", /Адреса без дополнительного поиска/],
@@ -55,10 +59,11 @@ test("server-renders all requested task pages", async () => {
   }
 });
 
-test("keeps horizontal day catalogue, official checkout handoff and six events", async () => {
-  const [data, dayCatalog, tickets, css] = await Promise.all([
+test("keeps horizontal day catalogue, official checkout handoff and five events", async () => {
+  const [data, dayCatalog, journey, tickets, css] = await Promise.all([
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/DayCatalog.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/JourneyOverview.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/TicketCenter.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
@@ -67,7 +72,8 @@ test("keeps horizontal day catalogue, official checkout handoff and six events",
     /export const FEATURED_EVENT_IDS = \[([\s\S]*?)\] as const;/,
   );
   assert.ok(featuredBlock);
-  assert.equal((featuredBlock[1].match(/"[^"]+"/g) ?? []).length, 6);
+  assert.equal((featuredBlock[1].match(/"[^"]+"/g) ?? []).length, 5);
+  assert.doesNotMatch(data, /Олимпийский парк|Поющий фонтан|Сочи Парк/);
 
   assert.match(dayCatalog, /DAY_CODES/);
   assert.match(dayCatalog, /aria-expanded/);
@@ -75,8 +81,16 @@ test("keeps horizontal day catalogue, official checkout handoff and six events",
   assert.match(css, /\.day-row\.is-open[\s\S]*flex:\s*1 1/);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-rows:\s*0fr/);
 
-  assert.match(tickets, /https:\/\/skypark\.ru\//);
-  assert.match(tickets, /https:\/\/rosakhutor\.ru\/tickets\//);
+  assert.match(journey, /phaseForDate/);
+  assert.match(journey, /adler-ticket-status/);
+  assert.match(journey, /adler-route-checks/);
+  assert.match(journey, /aria-current=\{isActive \? "step"/);
+  assert.match(css, /\.journey-track/);
+
+  assert.match(data, /export const TICKETS/);
+  assert.match(data, /https:\/\/skypark\.ru\//);
+  assert.match(data, /https:\/\/rosakhutor\.ru\/tickets\//);
+  assert.match(tickets, /import \{ TICKETS, type TicketItem \} from "\.\.\/data"/);
   assert.match(tickets, /официального продавца/);
   assert.match(tickets, /localStorage/);
   assert.match(css, /\[data-theme="light"\]/);

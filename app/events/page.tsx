@@ -4,10 +4,10 @@ import type { Metadata } from "next";
 import { ArrowRight, MapPin } from "../components/UiIcons";
 import AppShell from "../components/AppShell";
 import { PageIntro, PlaceLinks } from "../components/Primitives";
-import { FEATURED_EVENT_IDS, PLACES } from "../data";
+import { EVENT_COUNT, FEATURED_EVENT_IDS, PLACES } from "../data";
 
 export const metadata: Metadata = {
-  title: "6 мероприятий — Адлер 2026",
+  title: `${EVENT_COUNT} мероприятий — Адлер 2026`,
 };
 
 const BUY_LINKS: Record<string, { href: string; label: string }> = {
@@ -22,10 +22,10 @@ export default function EventsPage() {
   const ids = new Set<string>(FEATURED_EVENT_IDS);
   const events = PLACES.filter((place) => ids.has(place.id));
   return (
-    <AppShell active="/events" title="6 мест">
+    <AppShell active="/events" title={`${EVENT_COUNT} мест`}>
       <PageIntro
         eyebrow="Утверждённый маршрут"
-        title="Шесть мероприятий — все на одном экране"
+        title={`${EVENT_COUNT} мероприятий — все на одном экране`}
         lead="Без фильтров и запасных карточек: только те места, которые входят в поездку, с картой, маршрутом и покупкой."
       />
       <section className="event-catalog">
